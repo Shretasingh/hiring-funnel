@@ -2934,6 +2934,259 @@ renderDashboard = function(metrics, fileName, sourceTotal) {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════
+// INTELLIGENCE OVERHAUL — every active stage surfaces, drops are
+// ranked, sources/methods compared by quality, actions grounded
+// in the actual numbers rather than templated text.
+// ═══════════════════════════════════════════════════════════════
+
+// I1. Richer step insights: every drop ranked, top-3 bottlenecks
+function getStepInsights(metrics) {
+  const steps = metrics.funnel.slice(1).map((stage, i) => {
+    const prev = metrics.funnel[i];
+    return {
+      label: `${prev.label} → ${stage.label}`,
+      from: prev.count,
+      to: stage.count,
+      conversion: ratio(stage.count, prev.count),
+      drop: ratio(Math.max(prev.count - stage.count, 0), prev.count),
+      absDrop: Math.max(prev.count - stage.count, 0),
+    };
+  }).filter(s => s.from > 0);
+  const sortedByDrop = [...steps].sort((a, b) => b.drop - a.drop);
+  return {
+    bottleneck: sortedByDrop[0] || null,
+    bottlenecks: sortedByDrop.slice(0, 3),
+    strongest: [...steps].filter(s => s.to > 0).sort((a, b) => b.conversion - a.conversion)[0] || null,
+    allSteps: steps,
+  };
+}
+
+// I2. Stage chain: every active stage with count + rate vs prev
+function buildStageChain(metrics) {
+  const c = metrics.counts;
+  const chain = [{ name: 'Sourced', count: c.total, rate: null }];
+  if ((c.shortlisted + c.shortlistedMaybe) > 0) {
+    chain.push({ name: 'Shortlisted', count: c.shortlisted, rate: pct(c.shortlisted, c.total) });
+  }
+  if (metrics.primaryR1.tracked > 0 || c.r1Invited > 0) {
+    const denom = metrics.primaryR1.tracked || c.r1Invited;
+    chain.push({ name: 'R1 Passed', count: metrics.primaryR1.passed, rate: pct(metrics.primaryR1.passed, denom) });
+  }
+  if (metrics.r2Total > 0 || c.r2Invited > 0) {
+    const denom = metrics.r2Total || c.r2Invited;
+    chain.push({ name: 'R2 Selected', count: c.r2Selected, rate: pct(c.r2Selected, denom) });
+  }
+  if (c.finalSelected > 0 || c.finalRejected > 0) {
+    const decided = c.finalSelected + c.finalRejected;
+    chain.push({ name: 'Final', count: c.finalSelected, rate: pct(c.finalSelected, decided) });
+  }
+  if (c.offersShared > 0) {
+    chain.push({ name: 'Offer', count: c.offerAccepted, rate: pct(c.offerAccepted, c.offersShared) });
+  }
+  if (c.joined > 0 || c.offerAccepted > 0) {
+    const denom = c.offerAccepted || c.finalSelected || c.total;
+    chain.push({ name: 'Joined', count: c.joined, rate: pct(c.joined, denom) });
+  }
+  return chain;
+}
+
+// I3. Best/worst method per round (with sample-size guard)
+function rankMethods(stats, minSample = 5) {
+  const eligible = (stats || []).filter(s => s.tracked >= minSample);
+  if (eligible.length < 2) return null;
+  const ranked = [...eligible].sort((a, b) => (b.passed / b.tracked) - (a.passed / a.tracked));
+  return { best: ranked[0], worst: ranked[ranked.length - 1], all: ranked };
+}
+
+// I4. Source quality vs volume separation
+function sourceIntel(metrics) {
+  const eff = (metrics.sourceEfficiency || []).filter(s => s.sourced >= 5);
+  if (!eff.length) return null;
+  const byVolume = [...eff].sort((a, b) => b.sourced - a.sourced)[0];
+  const byQuality = [...eff].sort((a, b) => b.joinRate - a.joinRate)[0];
+  return { byVolume, byQuality, gapExists: byVolume.label !== byQuality.label && byQuality.joinRate > 0 };
+}
+
+// I5. Comprehensive AI brief — every active stage, every signal
+function buildAiBrief(metrics, sourceTotal) {
+  const c = metrics.counts;
+  const insights = getStepInsights(metrics);
+  const chain = buildStageChain(metrics);
+  const r1Best = rankMethods(metrics.r1MethodStats);
+  const r2Best = rankMethods(metrics.r2MethodStats);
+  const src = sourceIntel(metrics);
+  const hireMetric = c.joined > 0 ? c.joined : (c.offerAccepted || c.finalSelected);
+  const hireLabel = c.joined > 0 ? 'joined' : (c.offerAccepted ? 'accepted offer' : 'final-selected');
+
+  const chainText = chain.map((s, i) =>
+    i === 0 ? `${s.name} ${formatNum(s.count)}` : `${s.name} ${formatNum(s.count)} (${s.rate})`
+  ).join(' → ');
+
+  const roundLines = [];
+  if (metrics.primaryR1.tracked > 0) {
+    roundLines.push(`R1: ${formatNum(metrics.primaryR1.passed)} passed of ${formatNum(metrics.primaryR1.tracked)} tracked (${pct(metrics.primaryR1.passed, metrics.primaryR1.tracked)})`);
+  }
+  if (metrics.r2Total > 0) {
+    roundLines.push(`R2: ${formatNum(c.r2Selected)} selected of ${formatNum(metrics.r2Total)} tracked (${pct(c.r2Selected, metrics.r2Total)})`);
+  }
+  if (c.finalSelected > 0 || c.finalRejected > 0) {
+    roundLines.push(`Final: ${formatNum(c.finalSelected)} selected, ${formatNum(c.finalRejected)} rejected`);
+  }
+  if (c.offersShared > 0) {
+    roundLines.push(`Offers: ${formatNum(c.offerAccepted)} accepted of ${formatNum(c.offersShared)} shared (${pct(c.offerAccepted, c.offersShared)})`);
+  }
+  if (c.joined > 0) {
+    roundLines.push(`Joined: ${formatNum(c.joined)} of ${formatNum(c.offerAccepted || c.finalSelected || c.total)} (${pct(c.joined, c.offerAccepted || c.finalSelected || c.total)})`);
+  }
+
+  const dropList = (insights.bottlenecks || []).filter(b => b.drop > 5).slice(0, 3)
+    .map(b => `${b.label} (${b.drop.toFixed(1)}% drop, ${formatNum(b.absDrop)} candidates)`);
+
+  const methodLines = [];
+  if (r1Best) {
+    const bestRate = (r1Best.best.passed / r1Best.best.tracked) * 100;
+    const worstRate = (r1Best.worst.passed / r1Best.worst.tracked) * 100;
+    methodLines.push(`R1 — best: ${r1Best.best.method} (${bestRate.toFixed(1)}% pass), worst: ${r1Best.worst.method} (${worstRate.toFixed(1)}%)`);
+  }
+  if (r2Best) {
+    const bestRate = (r2Best.best.passed / r2Best.best.tracked) * 100;
+    const worstRate = (r2Best.worst.passed / r2Best.worst.tracked) * 100;
+    methodLines.push(`R2 — best: ${r2Best.best.method} (${bestRate.toFixed(1)}% select), worst: ${r2Best.worst.method} (${worstRate.toFixed(1)}%)`);
+  }
+
+  let sourceText;
+  if (src) {
+    if (src.gapExists) {
+      sourceText = `${src.byVolume.label} drives volume (${formatNum(src.byVolume.sourced)} sourced, ${src.byVolume.joinRate.toFixed(2)}% join rate) but ${src.byQuality.label} converts best (${formatNum(src.byQuality.sourced)} sourced, ${src.byQuality.joinRate.toFixed(2)}% join rate).`;
+    } else {
+      sourceText = `${src.byVolume.label} leads on both volume (${formatNum(src.byVolume.sourced)}) and quality (${src.byVolume.joinRate.toFixed(2)}% join rate).`;
+    }
+  } else {
+    sourceText = 'Not enough source data to compare channels reliably.';
+  }
+
+  const actions = [];
+  if (insights.bottleneck && insights.bottleneck.drop > 30) {
+    actions.push(`${insights.bottleneck.label} is losing ${insights.bottleneck.drop.toFixed(0)}% (${formatNum(insights.bottleneck.absDrop)} candidates) — investigate criteria, communication, or fit at this transition.`);
+  }
+  if (r1Best) {
+    const spread = (r1Best.best.passed / r1Best.best.tracked - r1Best.worst.passed / r1Best.worst.tracked) * 100;
+    if (spread > 15) actions.push(`Shift more R1 evaluations to ${r1Best.best.method} — pass rate is ${spread.toFixed(0)}pp higher than ${r1Best.worst.method}.`);
+  }
+  if (r2Best) {
+    const spread = (r2Best.best.passed / r2Best.best.tracked - r2Best.worst.passed / r2Best.worst.tracked) * 100;
+    if (spread > 15) actions.push(`Reweight R2 toward ${r2Best.best.method} — selection rate is ${spread.toFixed(0)}pp better than ${r2Best.worst.method}.`);
+  }
+  if (src && src.gapExists && src.byQuality.joinRate > Math.max(src.byVolume.joinRate, 0.5) * 1.5) {
+    const factor = src.byQuality.joinRate / Math.max(src.byVolume.joinRate, 0.01);
+    actions.push(`${src.byQuality.label} has ${factor.toFixed(1)}× the join rate of ${src.byVolume.label} — invest more sourcing budget there.`);
+  }
+  if (c.offersShared > 0 && c.offerAccepted < c.offersShared * 0.7) {
+    actions.push(`Offer acceptance is only ${pct(c.offerAccepted, c.offersShared)} — review compensation, role clarity, or competing-offer signals.`);
+  }
+  if (c.offerAccepted > 0 && c.joined < c.offerAccepted * 0.85) {
+    actions.push(`Acceptance-to-join is ${pct(c.joined, c.offerAccepted)} — strengthen pre-joining engagement to reduce no-show.`);
+  }
+  if (metrics.dataQuality.score < 75) {
+    actions.push(`Data coverage is ${metrics.dataQuality.score.toFixed(0)}% — fill gaps in: ${metrics.dataQuality.missing.join(', ') || 'stage tracking'}.`);
+  }
+  if (!actions.length) actions.push('Pipeline is healthy across all measured stages — focus on scaling top-of-funnel volume.');
+
+  return {
+    headline: selectedRole
+      ? `${selectedRole}: ${formatNum(c.total)} candidates → ${formatNum(hireMetric)} ${hireLabel}`
+      : `${formatNum(metrics.roleMix.length || 1)} role${metrics.roleMix.length > 1 ? 's' : ''}: ${formatNum(c.total)} candidates → ${formatNum(hireMetric)} ${hireLabel}`,
+    health: chainText,
+    chain,
+    roundLines,
+    bottleneck: dropList.length ? `Top drops — ${dropList.join('; ')}.` : 'No significant drops detected yet.',
+    source: sourceText,
+    rounds: roundLines.length ? roundLines.join(' · ') : 'No evaluation round data detected yet.',
+    methods: methodLines.length ? methodLines.join(' · ') : '',
+    actions,
+  };
+}
+
+// I6. Render the AI panels with richer, structured sections
+function renderAiPanels(metrics, sourceTotal) {
+  const brief = buildAiBrief(metrics, sourceTotal);
+  const previewEl = document.getElementById('aiSummaryPreview');
+  if (previewEl) {
+    previewEl.innerHTML = `<div class="ai-note"><div class="ai-note-title">${escapeHtml(brief.headline)}</div><div class="ai-note-body">${escapeHtml(brief.health)}</div></div>`;
+  }
+  const briefEl = document.getElementById('aiBrief');
+  if (!briefEl) return;
+  const sections = [];
+  sections.push(`<div class="ai-note"><div class="ai-note-title">Executive Readout</div><div class="ai-note-body"><strong>${escapeHtml(brief.headline)}</strong><br>${escapeHtml(brief.health)}</div></div>`);
+  if (brief.roundLines.length) {
+    sections.push(`<div class="ai-note"><div class="ai-note-title">Round-by-Round Outcomes</div><div class="ai-note-body">${brief.roundLines.map(l => `<div>• ${escapeHtml(l)}</div>`).join('')}</div></div>`);
+  }
+  sections.push(`<div class="ai-note"><div class="ai-note-title">Funnel Diagnosis</div><div class="ai-note-body">${escapeHtml(brief.bottleneck)}</div></div>`);
+  if (brief.methods) {
+    sections.push(`<div class="ai-note"><div class="ai-note-title">Method Intelligence</div><div class="ai-note-body">${escapeHtml(brief.methods)}</div></div>`);
+  }
+  sections.push(`<div class="ai-note"><div class="ai-note-title">Source Signal</div><div class="ai-note-body">${escapeHtml(brief.source)}</div></div>`);
+  sections.push(`<div class="ai-note"><div class="ai-note-title">Recommended Actions</div><div class="ai-action-list">${brief.actions.map(a => `<div class="ai-action">${escapeHtml(a)}</div>`).join('')}</div></div>`);
+  briefEl.innerHTML = sections.join('');
+}
+
+// I7. Conversion grid: add R1→R2, Final→Offer hand-offs and color-code
+//     stage table by drop severity
+const _intelRenderDashboard = renderDashboard;
+renderDashboard = function(metrics, fileName, sourceTotal) {
+  _intelRenderDashboard(metrics, fileName, sourceTotal);
+  const c = metrics.counts;
+
+  const cg = document.getElementById('conversionGrid');
+  if (cg) {
+    const conv = [];
+    if (c.total > 0 && (c.shortlisted + c.shortlistedMaybe) > 0) conv.push(['Shortlist Rate', pct(c.shortlisted, c.total), 'Of total pipeline', 'var(--accent)']);
+    if (c.shortlisted > 0 && c.r1Invited > 0) conv.push(['Shortlist → R1', pct(c.r1Invited, c.shortlisted), 'Shortlisted invited to R1', 'var(--accent3)']);
+    if (metrics.primaryR1.invited > 0) conv.push(['R1 Attendance', pct(metrics.primaryR1.completed, metrics.primaryR1.invited), 'R1 invited → completed', 'var(--accent3)']);
+    if (metrics.primaryR1.tracked > 0) conv.push(['R1 Pass Rate', pct(metrics.primaryR1.passed, metrics.primaryR1.tracked), 'R1 outcomes', 'var(--accent2)']);
+    if (metrics.primaryR1.passed > 0 && c.r2Invited > 0) conv.push(['R1 → R2', pct(c.r2Invited, metrics.primaryR1.passed), 'R1 passers invited to R2', 'var(--accent4)']);
+    if (metrics.r2Total > 0) conv.push(['R2 Selection', pct(c.r2Selected, metrics.r2Total), 'Of R2 results', 'var(--accent4)']);
+    if (c.r2Selected > 0 && c.finalSelected > 0) conv.push(['R2 → Final', pct(c.finalSelected, c.r2Selected), 'R2 selected → final', 'var(--success)']);
+    if (c.finalSelected > 0 && c.offersShared > 0) conv.push(['Final → Offer', pct(c.offersShared, c.finalSelected), 'Final selected → offered', 'var(--success)']);
+    if (c.offersShared > 0) conv.push(['Offer Accept', pct(c.offerAccepted, c.offersShared), 'Offered → accepted', 'var(--success)']);
+    if (c.offerAccepted > 0) conv.push(['Joined Rate', pct(c.joined, c.offerAccepted), 'Accepted → joined', '#00d4ff']);
+
+    cg.innerHTML = conv.length
+      ? conv.map(([l, r, f, col]) => `<div class="conv-card"><div class="conv-rate" style="color:${col};">${r}</div><div class="conv-label">${l}</div><div class="conv-from">${f}</div></div>`).join('')
+      : '<div class="no-data" style="grid-column:1/-1;">Not enough data for conversion rates yet</div>';
+  }
+
+  // Stage table row coloring by drop severity
+  document.querySelectorAll('#stageTableBody tr').forEach((tr, idx) => {
+    if (idx === 0) return;
+    const dropTd = tr.children[3];
+    if (!dropTd) return;
+    const m = dropTd.textContent.match(/([\d.]+)%/);
+    if (!m) return;
+    const drop = parseFloat(m[1]);
+    if (drop >= 50) tr.style.background = 'rgba(216,63,91,0.06)';
+    else if (drop >= 25) tr.style.background = 'rgba(198,146,20,0.05)';
+    else tr.style.background = '';
+  });
+};
+
+// I8. Polish ai-note styling so the new structured brief reads well
+(function injectIntelCss() {
+  const css = `
+    .ai-note { padding: 16px 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); margin-bottom: 14px; box-shadow: var(--shadow-soft); }
+    .ai-note-title { font-weight: 700; color: var(--accent); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+    .ai-note-body { color: var(--text); font-size: 14px; line-height: 1.65; }
+    .ai-note-body strong { color: var(--text); font-weight: 700; }
+    .ai-note-body div + div { margin-top: 4px; }
+    .ai-action { padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--surface2); border-radius: 8px; margin-bottom: 8px; line-height: 1.55; }
+    .ai-action:last-child { margin-bottom: 0; }
+  `;
+  const style = document.createElement('style');
+  style.textContent = css;
+  document.head.appendChild(style);
+})();
+
 // G9. Generic header / branding
 (function genericiseBranding() {
   const titleEl = document.querySelector('h1');
