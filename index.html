@@ -11,14 +11,14 @@
     --surface: #ffffff;
     --surface2: #eef3f8;
     --border: #d9e2ee;
-    --accent: #0b8f6b;
+    --accent: #0b5e57;
     --accent2: #d95f2b;
     --accent3: #5b5fd6;
     --accent4: #c69214;
     --text: #172033;
     --muted: #67758a;
     --danger: #d83f5b;
-    --success: #0b8f6b;
+    --success: #0b5e57;
     --shadow: 0 18px 42px rgba(33, 45, 70, 0.10);
     --shadow-soft: 0 8px 22px rgba(33, 45, 70, 0.07);
   }
@@ -27,7 +27,7 @@
 
   body {
     background:
-      radial-gradient(circle at top left, rgba(11,143,107,0.12), transparent 34vw),
+      radial-gradient(circle at top left, rgba(11,94,87,0.12), transparent 34vw),
       linear-gradient(180deg, #ffffff 0%, var(--bg) 36%);
     color: var(--text);
     font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -84,8 +84,8 @@
     font-size: 13px; color: var(--muted);
   }
   .status-pill {
-    background: rgba(11,143,107,0.10);
-    border: 1px solid rgba(11,143,107,0.24);
+    background: rgba(11,94,87,0.10);
+    border: 1px solid rgba(11,94,87,0.24);
     color: var(--accent);
     padding: 4px 12px;
     border-radius: 100px;
@@ -123,7 +123,7 @@
     white-space: nowrap;
   }
   .tab-btn:hover { color: var(--text); }
-  .tab-btn.active { color: #fff; background: var(--accent); box-shadow: 0 8px 18px rgba(11,143,107,0.18); }
+  .tab-btn.active { color: #fff; background: var(--accent); box-shadow: 0 8px 18px rgba(11,94,87,0.18); }
 
   /* PANELS */
   .panel { display: none; animation: fadeIn 0.3s ease; }
@@ -142,7 +142,7 @@
     overflow: hidden;
     transition: transform 0.2s, border-color 0.2s;
   }
-  .kpi-card:hover { transform: translateY(-2px); border-color: rgba(11,143,107,0.28); box-shadow: var(--shadow); }
+  .kpi-card:hover { transform: translateY(-2px); border-color: rgba(11,94,87,0.28); box-shadow: var(--shadow); }
   .kpi-card::before {
     content: '';
     position: absolute;
@@ -494,8 +494,8 @@
     cursor: pointer;
     transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s, background 0.2s;
   }
-  .job-btn:hover { border-color: rgba(11,143,107,0.35); transform: translateY(-1px); box-shadow: var(--shadow-soft); }
-  .job-btn.active { background: rgba(11,143,107,0.10); border-color: rgba(11,143,107,0.42); }
+  .job-btn:hover { border-color: rgba(11,94,87,0.35); transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+  .job-btn.active { background: rgba(11,94,87,0.10); border-color: rgba(11,94,87,0.42); }
   .job-name { font-weight: 800; font-size: 13px; line-height: 1.25; }
   .job-meta { color: var(--muted); font-size: 11px; margin-top: 5px; display: flex; gap: 8px; flex-wrap: wrap; }
   .job-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--accent); display: inline-block; margin-right: 6px; }
@@ -510,7 +510,7 @@
   .empty-step span { color: var(--muted); font-size: 12px; line-height: 1.45; }
   .job-tools { display: grid; gap: 10px; margin-bottom: 12px; }
   .job-search { width: 100%; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 10px; padding: 10px 11px; font-family: 'Manrope', system-ui, sans-serif; font-size: 13px; outline: none; }
-  .job-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,143,107,0.10); }
+  .job-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,94,87,0.10); }
   .readiness-card { display: grid; gap: 14px; }
   .score-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .score-value { font-family: 'Space Grotesk', sans-serif; font-size: 42px; font-weight: 700; color: var(--accent); line-height: 1; }
@@ -522,7 +522,7 @@
   .role-compare-wrap { overflow-x: auto; }
   .schema-pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .schema-pill { border: 1px solid var(--border); background: var(--surface2); color: var(--muted); border-radius: 999px; padding: 5px 9px; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
-  .schema-pill.ok { background: rgba(11,143,107,0.10); color: var(--accent); border-color: rgba(11,143,107,0.22); }
+  .schema-pill.ok { background: rgba(11,94,87,0.10); color: var(--accent); border-color: rgba(11,94,87,0.22); }
   .schema-pill.warn { background: rgba(217,95,43,0.10); color: var(--accent2); border-color: rgba(217,95,43,0.22); }
 
   /* RECORDS */
@@ -553,8 +553,8 @@
   .upload-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
   .file-input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; pointer-events: none; }
   .upload-btn {
-    border: 1px solid rgba(11,143,107,0.30);
-    background: rgba(11,143,107,0.10);
+    border: 1px solid rgba(11,94,87,0.30);
+    background: rgba(11,94,87,0.10);
     color: var(--accent);
     border-radius: 8px;
     padding: 8px 12px;
@@ -578,7 +578,7 @@
   .dataset-error.active { display: block; }
   .empty-state {
     background: var(--surface);
-    border: 1px dashed rgba(11,143,107,0.34);
+    border: 1px dashed rgba(11,94,87,0.34);
     border-radius: 14px;
     box-shadow: var(--shadow-soft);
     padding: 36px;
@@ -613,7 +613,7 @@
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .filter-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,143,107,0.12); }
+  .filter-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,94,87,0.12); }
   .filter-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
   .clear-btn {
     border: 1px solid var(--border);
@@ -715,10 +715,10 @@
     font-size: 11px;
     outline: none;
   }
-  .sheet-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,143,107,0.10); }
+  .sheet-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,94,87,0.10); }
   .connect-btn {
-    border: 1px solid rgba(11,143,107,0.35);
-    background: rgba(11,143,107,0.10);
+    border: 1px solid rgba(11,94,87,0.35);
+    background: rgba(11,94,87,0.10);
     color: var(--accent);
     border-radius: 8px;
     padding: 8px 14px;
@@ -730,7 +730,7 @@
     white-space: nowrap;
     transition: all 0.18s;
   }
-  .connect-btn:hover { background: rgba(11,143,107,0.18); }
+  .connect-btn:hover { background: rgba(11,94,87,0.18); }
   .connect-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .refresh-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .refresh-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
@@ -819,14 +819,14 @@
     font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer;
   }
   .modal-btn-save {
-    border: 1px solid rgba(11,143,107,0.35); background: var(--accent); color: #fff;
+    border: 1px solid rgba(11,94,87,0.35); background: var(--accent); color: #fff;
     border-radius: 9px; padding: 9px 22px;
     font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer;
     font-weight: 700;
   }
   .modal-saved-badge {
-    background: rgba(11,143,107,0.12); color: var(--accent);
-    border: 1px solid rgba(11,143,107,0.25);
+    background: rgba(11,94,87,0.12); color: var(--accent);
+    border: 1px solid rgba(11,94,87,0.25);
     border-radius: 6px; padding: 4px 10px;
     font-size: 10px; font-family: 'JetBrains Mono', monospace;
     text-transform: uppercase; letter-spacing: 0.08em;
@@ -1003,8 +1003,8 @@
       <input class="filter-input" id="nameFilter" type="search" placeholder="Search full name" autocomplete="off">
     </div>
     <div class="filter-field">
-      <label for="soulFilter">Soul ID</label>
-      <input class="filter-input" id="soulFilter" type="search" placeholder="Search Soul ID" autocomplete="off">
+      <label for="soulFilter">Candidate ID</label>
+      <input class="filter-input" id="soulFilter" type="search" placeholder="Search candidate ID" autocomplete="off">
     </div>
     <div class="filter-field">
       <label for="phoneFilter">Phone number</label>
@@ -1050,7 +1050,7 @@
       <div class="card"><div class="card-title">Supply Sources Breakdown</div><div class="bar-chart" id="sourceBreakdown"></div></div>
       <div class="card"><div class="card-title">Shift / Availability Distribution</div><div id="shiftDistribution"></div></div>
     </div>
-    <div class="section-title">Relocation & Key Stats</div>
+    <div class="section-title" id="keyStatsTitle" style="display:none;">Key Stats</div>
     <div class="grid-3" id="keyStats"></div>
     <div class="section-title role-section-fl" id="flSection" style="display:none;">Freelancer / Contract Stats</div>
     <div class="ops-kpi-row" id="flKpis" style="display:none;"></div>
@@ -1079,8 +1079,12 @@
       <div class="card"><div class="card-title">Unified R1 & Round Layers</div><div id="roundPerformance"></div></div>
       <div class="card"><div class="card-title">Round Outcome Mix</div><div class="bar-chart" id="roundOutcomeMix"></div></div>
     </div>
-    <div class="grid-2">
-      <div class="card"><div class="card-title">Assessment/Test Layer</div><div class="bar-chart" id="fabricResults"></div></div>
+    <div class="grid-2" id="methodCardsRow">
+      <div class="card" id="r1MethodCard"><div class="card-title">R1 Method Breakdown</div><div class="bar-chart" id="r1MethodChart"></div></div>
+      <div class="card" id="r2MethodCard"><div class="card-title">R2 Method Breakdown</div><div class="bar-chart" id="r2MethodChart"></div></div>
+    </div>
+    <div class="grid-2" id="legacyAssessRow" style="display:none;">
+      <div class="card"><div class="card-title">Assessment / Test Layer</div><div class="bar-chart" id="fabricResults"></div></div>
       <div class="card"><div class="card-title">Video / Submission Layer</div><div class="muted-line" id="videoSummary" style="margin-bottom:12px;"></div><div class="bar-chart" id="videoResults"></div></div>
     </div>
     <div class="section-title">Interview / Later Round Results</div>
@@ -1121,8 +1125,10 @@
     <div class="role-grid" id="roleGrid"></div>
     <div class="section-title">Role Comparison</div>
     <div class="card" style="margin-bottom:32px;"><div class="card-title">Opening-by-opening performance</div><div id="roleComparison"></div></div>
-    <div class="section-title">Annotation Experience Types</div>
-    <div class="card" style="margin-bottom:32px;"><div class="card-title">Formats candidates reported experience in</div><div class="pill-wrap" id="annotationPills"></div></div>
+    <div id="annotationSection" style="display:none;">
+      <div class="section-title">Annotation Experience Types</div>
+      <div class="card" style="margin-bottom:32px;"><div class="card-title">Formats candidates reported experience in</div><div class="pill-wrap" id="annotationPills"></div></div>
+    </div>
     <div class="section-title">Candidate Academic Background</div>
     <div class="grid-2">
       <div class="card"><div class="card-title">Degree Types</div><div class="bar-chart" id="degreeTypes"></div></div>
@@ -2634,6 +2640,207 @@ buildDataQuality = function(rows) {
   }
   return result;
 };
+
+// ═══════════════════════════════════════════════════════════════
+// FULL-GENERALISATION OVERRIDES — strip role-specific UI/labels
+// ═══════════════════════════════════════════════════════════════
+
+// G1. Add R1/R2 method aliases so we can read the canonical schema
+Object.assign(FIELD_ALIASES, {
+  'R1 Method': ['R1_Method','R1 Method','Round 1 Method','First Round Method'],
+  'R2 Method': ['R2_Method','R2 Method','Round 2 Method'],
+});
+
+// G2. Compute method breakdowns + extend metrics
+const _genComputeMetrics = computeDashboardMetrics;
+computeDashboardMetrics = function(rows) {
+  const m = _genComputeMetrics(rows);
+  m.r1Methods = topN(countBy(rows, 'R1 Method'), 8);
+  m.r2Methods = topN(countBy(rows, 'R2 Method'), 8);
+  m.hasFabricVideo = rows.some(r => hasValue(r['Fabric Invited']) || hasValue(r['Fabric Status']) || hasValue(r['Video Invited']) || hasValue(r['Video Submitted']));
+  m.hasAnnotation = m.annotation.length > 0;
+  m.hasCheating = m.counts.cheatingTracked > 0;
+  return m;
+};
+
+// G3. Generic R1 label — drop "Fabric AI + Video" wording when not applicable
+const _genBuildUnifiedR1 = buildUnifiedR1Round;
+buildUnifiedR1Round = function(rows) {
+  const r = _genBuildUnifiedR1(rows);
+  if (r.label === 'R1 - Fabric AI + Video') r.label = 'R1 - First Evaluation';
+  return r;
+};
+
+// G4. Adaptive renderAssessments — show R1/R2 method charts when methods exist,
+//     fall back to legacy Fabric/Video panels only when that data is present
+const _genRenderAssessments = renderAssessments;
+renderAssessments = function(metrics) {
+  _genRenderAssessments(metrics);
+  const c = metrics.counts;
+
+  // Toggle method vs legacy rows
+  const hasMethods = metrics.r1Methods.length > 0 || metrics.r2Methods.length > 0;
+  const methodRow = document.getElementById('methodCardsRow');
+  const legacyRow = document.getElementById('legacyAssessRow');
+
+  if (hasMethods) {
+    if (methodRow) methodRow.style.display = '';
+    if (legacyRow) legacyRow.style.display = 'none';
+    // R1 method chart
+    if (metrics.r1Methods.length) {
+      renderBarChart('r1MethodChart', metrics.r1Methods, null, { showPercent: false });
+    } else {
+      document.getElementById('r1MethodChart').innerHTML = '<div class="no-data">No R1 method data</div>';
+    }
+    // R2 method chart
+    const r2Card = document.getElementById('r2MethodCard');
+    if (metrics.r2Methods.length) {
+      if (r2Card) r2Card.style.display = '';
+      renderBarChart('r2MethodChart', metrics.r2Methods, null, { showPercent: false });
+    } else if (r2Card) {
+      r2Card.style.display = 'none';
+    }
+  } else if (metrics.hasFabricVideo) {
+    if (methodRow) methodRow.style.display = 'none';
+    if (legacyRow) legacyRow.style.display = '';
+  } else {
+    if (methodRow) methodRow.style.display = 'none';
+    if (legacyRow) legacyRow.style.display = 'none';
+  }
+
+  // Replace integrity-flag KPI when no cheating column exists
+  if (!metrics.hasCheating) {
+    const kpis = document.getElementById('assessmentKpis');
+    if (kpis) {
+      const primary = metrics.primaryR1;
+      kpis.innerHTML = [
+        renderKpi('Detected Layers', formatNum(metrics.roundMetrics.length), 'Available evaluation layers', 'var(--accent3)'),
+        renderKpi('Primary R1 Layer', primary.label.replace('R1 - ',''), `${formatNum(primary.tracked)} tracked`, 'var(--accent2)'),
+        renderKpi('R1 Passed', formatNum(primary.passed), `${pct(primary.passed, primary.tracked)} pass rate`, 'var(--accent)'),
+        renderKpi('R2 Selected', formatNum(c.r2Selected), `${pct(c.r2Selected, metrics.r2Total)} of R2`, 'var(--accent4)'),
+      ].join('');
+    }
+  }
+};
+
+// G5. Generic Records table — uses canonical schema fields, no GHealth columns
+const _genRenderRecords = renderRecords;
+renderRecords = function(metrics) {
+  const rows = metrics.rows;
+  const isOps = currentViewRole === 'freelancer_ops';
+  const columns = isOps ? [
+    ['Role', r => r.Role || '-'],
+    ['Candidate', r => `<div class="records-name">${escapeHtml(r['Full Name']||'Unnamed')}</div><div class="records-email">${escapeHtml(r.Email||'')}</div>`],
+    ['Phone', r => r['Contact Number'] || '-'],
+    ['Joined', r => r.Joined || '-'],
+    ['Contract', r => r['Contract Status'] || '-'],
+    ['NDA', r => r['NDA Status'] || '-'],
+    ['Payment', r => r['Payment Status'] || '-'],
+  ] : [
+    ['Role', r => r.Role || '-'],
+    ['Candidate', r => `<div class="records-name">${escapeHtml(r['Full Name']||'Unnamed')}</div><div class="records-email">${escapeHtml(r.Email||'')}</div>`],
+    ['Phone', r => r['Contact Number'] || '-'],
+    ['Location', r => r['Location'] || '-'],
+    ['Source', r => r['Pool Name'] || '-'],
+    ['Stage', r => `<span class="stage-chip">${escapeHtml(latestStage(r))}</span>`],
+    ['Shortlisted', r => r.Shortlisted || '-'],
+    ['R1 Method', r => r['R1 Method'] || '-'],
+    ['R1 Status', r => r['R1 Status'] || '-'],
+    ['R1 Score', r => r['R1 Score'] || '-'],
+    ['R2 Status', r => r['R2 Status'] || '-'],
+    ['Final', r => r['Final Status'] || '-'],
+    ['Offer', r => r['Offers Shared'] || r['Offer Letter Status'] || '-'],
+    ['Joined', r => r.Joined || '-'],
+  ];
+  const visibleRows = rows.slice(0, 1000);
+  const el = document.getElementById('recordsTable');
+  if (!el) return;
+  el.innerHTML = rows.length
+    ? `<div class="records-toolbar"><div class="records-count">Showing ${formatNum(visibleRows.length)} of ${formatNum(rows.length)} records${rows.length>visibleRows.length?' (first 1,000 shown)':''}</div></div>
+       <div class="records-table-wrap"><table class="records-table"><thead><tr>${columns.map(([l])=>`<th>${escapeHtml(l)}</th>`).join('')}</tr></thead><tbody>${visibleRows.map(r=>`<tr>${columns.map(([,g])=>`<td>${g(r)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
+    : '<div class="no-data">No records match the current filters.</div>';
+};
+
+// G6. Generic Candidate Matches table (within Analytics)
+const _genRenderAnalytics = renderAnalytics;
+renderAnalytics = function(metrics, sourceTotal) {
+  _genRenderAnalytics(metrics, sourceTotal);
+  const candidates = metrics.rows.slice(0, 8);
+  const cm = document.getElementById('candidateMatches');
+  if (!cm) return;
+  cm.innerHTML = candidates.length
+    ? `<div class="candidate-table-wrap"><table class="mini-table">
+        <thead><tr><th>Candidate</th><th>Role</th><th>Source</th><th>Phone</th><th>Stage</th></tr></thead>
+        <tbody>${candidates.map(r=>`<tr>
+          <td><div class="candidate-name">${escapeHtml(r['Full Name']||'Unnamed')}</div>
+              <div class="candidate-meta">${escapeHtml(r['Email']||'No email')}</div></td>
+          <td>${escapeHtml(r.Role||'Unknown role')}</td>
+          <td>${escapeHtml(r['Pool Name']||'-')}</td>
+          <td>${escapeHtml(r['Contact Number']||'-')}</td>
+          <td><span class="stage-chip">${escapeHtml(latestStage(r))}</span></td>
+        </tr>`).join('')}</tbody></table></div>`
+    : '<div class="no-data">No matching candidates</div>';
+};
+
+// G7. Hide Annotation section unless data is present; clean up Role grid labels
+const _genRenderRole = renderRole;
+renderRole = function(metrics) {
+  _genRenderRole(metrics);
+  const sec = document.getElementById('annotationSection');
+  if (sec) sec.style.display = metrics.hasAnnotation ? '' : 'none';
+};
+
+// G8. Adaptive conversion grid — drop irrelevant rates when data is absent
+//     Wrap renderDashboard once more
+const _genRenderDashboard = renderDashboard;
+renderDashboard = function(metrics, fileName, sourceTotal) {
+  _genRenderDashboard(metrics, fileName, sourceTotal);
+  const c = metrics.counts;
+
+  // Toggle keyStats section title visibility based on whether any stats render
+  const ksTitle = document.getElementById('keyStatsTitle');
+  const ksEl = document.getElementById('keyStats');
+  if (ksTitle && ksEl) {
+    ksTitle.style.display = ksEl.children.length > 0 ? '' : 'none';
+  }
+
+  // Rebuild conversion grid adaptively — only show rates with denominators
+  const conv = [];
+  if (c.total > 0) conv.push(['Shortlist Rate', pct(c.shortlisted, c.total), 'Of total pipeline', 'var(--accent)']);
+  if (metrics.primaryR1.invited > 0) conv.push(['R1 Attendance', pct(metrics.primaryR1.completed, metrics.primaryR1.invited), metrics.primaryR1.label, 'var(--accent3)']);
+  if (metrics.primaryR1.tracked > 0) conv.push(['R1 Pass Rate', pct(metrics.primaryR1.passed, metrics.primaryR1.tracked), 'First evaluation layer', 'var(--accent2)']);
+  if (metrics.r2Total > 0) conv.push(['R2 Selection', pct(c.r2Selected, metrics.r2Total), 'Of R2 results', 'var(--accent4)']);
+  if (c.offersShared > 0) conv.push(['Offer Accept', pct(c.offerAccepted, c.offersShared), 'Offered to Accepted', 'var(--success)']);
+  if (c.offerAccepted > 0) conv.push(['Joined Rate', pct(c.joined, c.offerAccepted), 'Accepted to Joined', '#00d4ff']);
+  if (c.total > 0 && c.finalSelected > 0 && c.offersShared === 0) conv.push(['Final Select Rate', pct(c.finalSelected, c.total), 'Of total pipeline', 'var(--success)']);
+
+  const cg = document.getElementById('conversionGrid');
+  if (cg) {
+    cg.innerHTML = conv.length
+      ? conv.map(([l, r, f, col]) => `<div class="conv-card"><div class="conv-rate" style="color:${col};">${r}</div><div class="conv-label">${l}</div><div class="conv-from">${f}</div></div>`).join('')
+      : '<div class="no-data" style="grid-column:1/-1;">Not enough data for conversion rates yet</div>';
+  }
+
+  // Sources tab — hide Campus card when not relevant
+  const campusEl = document.getElementById('campusBreakdown');
+  if (campusEl) {
+    const campusCard = campusEl.closest('.card');
+    if (campusCard) campusCard.parentElement.style.display = metrics.campusBreakdown.length > 0 ? '' : 'none';
+  }
+};
+
+// G9. Generic header / branding
+(function genericiseBranding() {
+  const titleEl = document.querySelector('h1');
+  if (titleEl) titleEl.innerHTML = 'Hiring <span>Funnel</span>';
+  const tag = document.querySelector('.header-tag');
+  if (tag) tag.textContent = 'Universal Hiring Intelligence';
+  const fl = document.getElementById('footerLeft');
+  if (fl) fl.textContent = 'Hiring Funnel Dashboard';
+  document.title = 'Hiring Funnel Dashboard';
+  const subtitle = document.getElementById('workspaceSubtitle');
+  if (subtitle) subtitle.textContent = 'Universal hiring funnel — works across any role, any sheet structure.';
+})();
 
 </script>
 
