@@ -1149,12 +1149,12 @@
       <div class="card" id="locationCard"><div class="card-title">Location Distribution</div><div class="bar-chart" id="locationChart"></div></div>
     </div>
     <div class="insights-grid">
-      <div class="card" id="expCard"><div class="card-title">Experience Distribution</div><div class="bar-chart" id="expChart"></div></div>
-      <div class="card" id="payCard"><div class="card-title">Expected Pay / Rate Range</div><div class="bar-chart" id="payChart"></div></div>
+      <div class="card" id="expCard"><div class="card-title">Experience Distribution</div><div class="bar-chart" id="expChart"></div><div class="muted-line" id="expStat" style="margin-top:10px;"></div></div>
+      <div class="card" id="payCard"><div class="card-title">Expected Pay / Rate Range</div><div class="bar-chart" id="payChart"></div><div class="muted-line" id="payStat" style="margin-top:10px;"></div></div>
     </div>
     <div class="grid-2">
       <div class="card" id="empTypeCard"><div class="card-title">Employment Type Preference</div><div id="empTypeChart"></div></div>
-      <div class="card" id="scoreCard"><div class="card-title">Score Distribution</div><div class="bar-chart" id="scoreChart"></div></div>
+      <div class="card" id="scoreCard"><div class="card-title">Score Distribution</div><div class="bar-chart" id="scoreChart"></div><div class="muted-line" id="scoreStat" style="margin-top:10px;"></div></div>
     </div>
     <div class="section-title" id="extraColsTitle" style="display:none;">Role-Specific Fields</div>
     <div class="insights-grid" id="extraColsGrid" style="display:none;"></div>
@@ -1246,14 +1246,14 @@ const FIELD_ALIASES = {
   'Video Cleared':      ['Video Cleared','Video Status','Video Result'],
   'Assessment Cleared': ['Assessment Cleared','Assessment Passed'],
   'R1 Method':          ['R1_Method','R1 Method','Round 1 Method'],
-  'R1 Invited':         ['R1_Date_Sent','R1_Campaign_ID','R1_Batch_ID','R1 Invited','Round 1 Invited','Interview 1 Invited','First Round Invited'],
+  'R1 Invited':         ['R1 Invited','Round 1 Invited','Interview 1 Invited','First Round Invited','R1_Method'],
   'R1 Attended':        ['R1_Submission_Date','R1 Attended','Round 1 Attended','Interview 1 Attended'],
   'R1 Status':          ['R1_Status','R1 Status','Round 1 Status','Interview 1 Status','Round 1 Result','First Round Result'],
   'R1 Score':           ['R1_Score','R1 Score'],
   'R1 Reviewer':        ['R1_Reviewer','R1 Reviewer'],
   'R1 Feedback':        ['R1_Feedback','R1 Feedback'],
   'R2 Method':          ['R2_Method','R2 Method','Round 2 Method'],
-  'R2 Invited':         ['R2_Date_Sent','R2_Campaign_ID','R2_Batch_ID','R2 Invited','Round 2 Invited','Final Interview Invited'],
+  'R2 Invited':         ['R2 Invited','Round 2 Invited','Final Interview Invited','R2_Method'],
   'R2 Attended':        ['R2_Submission_Date','R2 Attended','Round 2 Attended','Final Interview Attended'],
   'R2 Status':          ['R2_Status','R2 Status','Round 2 Status','Final Interview Status'],
   'R2 Score':           ['R2_Score','R2 Score'],
@@ -1283,6 +1283,7 @@ let currentViewRole = 'all';
 let autoRefreshTimer = null;
 let lastConnectedUrl = '';
 let userColumnMap = {};
+let allColumnNames = [];
 
 /* ---- Persist/load user column map ---- */
 function loadUserColumnMap() {
@@ -1338,6 +1339,11 @@ function findAlias(row, canonical) {
 
 function canonicalizeRows(rows, fileName) {
   const fallbackRole = fileName.replace(/\.csv$/i,'').replace(/[_-]+/g,' ').trim() || 'Uploaded Role';
+  // Capture raw column names for column-mapping dropdowns
+  if (rows.length) {
+    const rawCols = Object.keys(rows[0]).filter(k => !k.startsWith('__'));
+    if (rawCols.length) allColumnNames = rawCols;
+  }
   return rows.map(row => {
     const next = { ...row };
     /* Apply user column map first */
@@ -1558,12 +1564,16 @@ document.getElementById('csvInput').addEventListener('change', async event => {
 /* ---- Column mapping modal ---- */
 function openColMapModal() {
   const body = document.getElementById('colMapBody');
+  const opts = ['', ...allColumnNames].map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c || '— auto-detect —')}</option>`).join('');
   body.innerHTML = MUST_HAVE_FIELDS.map(f => {
     const saved = userColumnMap[f.canonical] || '';
+    const selectOpts = ['', ...allColumnNames].map(c =>
+      `<option value="${escapeHtml(c)}" ${c === saved ? 'selected' : ''}>${escapeHtml(c || '— auto-detect —')}</option>`
+    ).join('');
     return `<div class="modal-field-row">
       <div><div class="mfr-label">${escapeHtml(f.label)}</div><div class="mfr-hint">default: ${escapeHtml(f.hint)}</div></div>
       <div class="mfr-type">${escapeHtml(f.type)}</div>
-      <input class="mfr-input" data-canonical="${escapeHtml(f.canonical)}" placeholder="${escapeHtml(f.hint)}" value="${escapeHtml(saved)}">
+      <select class="mfr-input" data-canonical="${escapeHtml(f.canonical)}" style="min-width:180px;">${selectOpts}</select>
     </div>`;
   }).join('');
   document.getElementById('colMapOverlay').classList.remove('hidden');
@@ -2386,7 +2396,12 @@ function buildAdaptiveFunnel(counts, rows) {
     { label:'Offer Accepted',  count:counts.offerAccepted, badge:'badge-green',  showIf:counts.offerAccepted > 0 },
     { label:'Joined',          count:counts.joined,        badge:'badge-green',  showIf:counts.joined > 0 },
   ];
-  return all.filter(s => s.always || s.showIf).map((s, i) => ({ ...s, status: s.badge.replace('badge-','').toUpperCase(), color: COLORS[i % COLORS.length] }));
+  const stages = all.filter(s => s.always || s.showIf);
+  // Enforce monotonic decrease — funnel counts can never increase downstream
+  for (let i = 1; i < stages.length; i++) {
+    stages[i].count = Math.min(stages[i].count, stages[i-1].count);
+  }
+  return stages.map((s, i) => ({ ...s, status: s.badge.replace('badge-','').toUpperCase(), color: COLORS[i % COLORS.length] }));
 }
 
 // 11. Extend computeDashboardMetrics to add new fields
@@ -2448,20 +2463,22 @@ function renderInsights(metrics) {
   // Experience
   if (metrics.expDistribution.length) {
     renderBarChart('expChart', metrics.expDistribution, null, { showPercent: false });
-    if (metrics.avgExp !== null) {
-      document.getElementById('expChart').insertAdjacentHTML('afterend',
-        `<div class="muted-line" style="margin-top:10px;">Average experience: <strong>${metrics.avgExp.toFixed(1)} yrs</strong></div>`);
-    }
-  } else { document.getElementById('expChart').innerHTML = '<div class="no-data">No experience data detected</div>'; }
+    document.getElementById('expStat').innerHTML = metrics.avgExp !== null
+      ? `Average experience: <strong>${metrics.avgExp.toFixed(1)} yrs</strong>` : '';
+  } else {
+    document.getElementById('expChart').innerHTML = '<div class="no-data">No experience data detected</div>';
+    document.getElementById('expStat').innerHTML = '';
+  }
 
   // Pay Rate
   if (metrics.payRateData.length) {
     renderBarChart('payChart', metrics.payRateData, null, { showPercent: false });
-    if (metrics.payRange) {
-      document.getElementById('payChart').insertAdjacentHTML('afterend',
-        `<div class="muted-line" style="margin-top:10px;">Range: <strong>${metrics.payRange.min}–${metrics.payRange.max}</strong> · Avg: <strong>${metrics.payRange.avg.toFixed(1)}</strong></div>`);
-    }
-  } else { document.getElementById('payChart').innerHTML = '<div class="no-data">No pay rate data detected</div>'; }
+    document.getElementById('payStat').innerHTML = metrics.payRange
+      ? `Range: <strong>${metrics.payRange.min}–${metrics.payRange.max}</strong> · Avg: <strong>${metrics.payRange.avg.toFixed(1)}</strong>` : '';
+  } else {
+    document.getElementById('payChart').innerHTML = '<div class="no-data">No pay rate data detected</div>';
+    document.getElementById('payStat').innerHTML = '';
+  }
 
   // Employment type
   if (metrics.employmentTypes.length) {
@@ -2471,15 +2488,23 @@ function renderInsights(metrics) {
   // Score distribution
   if (metrics.scoreStats) {
     renderBarChart('scoreChart', metrics.scoreStats.distribution, null, { showPercent: false });
-    document.getElementById('scoreChart').insertAdjacentHTML('afterend',
-      `<div class="muted-line" style="margin-top:10px;">Avg: <strong>${metrics.scoreStats.avg.toFixed(3)}</strong> · Min: ${metrics.scoreStats.min.toFixed(2)} · Max: ${metrics.scoreStats.max.toFixed(2)} · ${metrics.scoreStats.count} scored</div>`);
-  } else { document.getElementById('scoreChart').innerHTML = '<div class="no-data">No score data detected</div>'; }
-
-  // Extra role-specific cols (annotation use cases etc.)
-  const extras = [];
-  if (metrics.annotationUseCases.length > 0) {
-    extras.push({ title: 'Annotation Use Cases', items: metrics.annotationUseCases });
+    document.getElementById('scoreStat').innerHTML = `Avg: <strong>${metrics.scoreStats.avg.toFixed(3)}</strong> · Min: ${metrics.scoreStats.min.toFixed(2)} · Max: ${metrics.scoreStats.max.toFixed(2)} · ${metrics.scoreStats.count} scored`;
+  } else {
+    document.getElementById('scoreChart').innerHTML = '<div class="no-data">No score data detected</div>';
+    document.getElementById('scoreStat').innerHTML = '';
   }
+
+  // Dynamic extra columns: any column not already handled by FIELD_ALIASES, with 5+ values and 2–30 unique values
+  const mappedCols = new Set(Object.values(FIELD_ALIASES).flat().map(v => v.toLowerCase()));
+  const extras = Object.keys(metrics.rows[0] || {}).filter(col => {
+    if (col.startsWith('__')) return false;
+    if (mappedCols.has(col.toLowerCase())) return false;
+    const validRows = metrics.rows.filter(r => hasValue(r[col]));
+    if (validRows.length < 5) return false;
+    const uniqueVals = new Set(validRows.map(r => normalize(r[col]))).size;
+    return uniqueVals >= 2 && uniqueVals <= 30;
+  }).map(col => ({ title: col, items: topN(countBy(metrics.rows, col), 8) })).filter(e => e.items.length >= 2);
+
   if (extras.length) {
     document.getElementById('extraColsTitle').style.display = '';
     document.getElementById('extraColsGrid').style.display = '';
