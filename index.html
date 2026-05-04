@@ -3376,6 +3376,432 @@ applyRoleView = function() {
 };
 applyRoleView();
 
+// ═══════════════════════════════════════════════════════════════
+// PM UX OVERHAUL — tab arrows, role context, sticky stage column,
+// pay-range unit warning, bottleneck benchmark, rich empty states,
+// date validation, ops candidates tab, single-job breadcrumb.
+// ═══════════════════════════════════════════════════════════════
+
+// PM-CSS: inject all the styles needed for the UX upgrades
+(function injectPmCss() {
+  const css = `
+    /* ISSUE 1 — Tab scroll arrows + fade gradient */
+    .tab-bar-wrapper { display: flex; align-items: center; gap: 4px; position: relative; margin-bottom: 32px; }
+    .tab-bar-wrapper > nav.tabs { margin-bottom: 0; flex: 1; min-width: 0; }
+    .tab-scroll-btn {
+      flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; width: 32px; height: 36px; font-size: 1.3rem;
+      cursor: pointer; color: var(--accent); display: flex; align-items: center;
+      justify-content: center; line-height: 1; transition: all 0.15s; font-weight: 700;
+    }
+    .tab-scroll-btn:hover { background: var(--surface2); color: var(--text); }
+    .tab-scroll-btn[disabled] { opacity: 0.35; cursor: default; }
+    .tab-fade-right {
+      position: absolute; right: 38px; top: 0; width: 36px; height: 100%;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,0.95));
+      pointer-events: none; z-index: 2; border-radius: 0 12px 12px 0;
+    }
+    .tab-fade-left {
+      position: absolute; left: 38px; top: 0; width: 36px; height: 100%;
+      background: linear-gradient(to left, transparent, rgba(255,255,255,0.95));
+      pointer-events: none; z-index: 2; border-radius: 12px 0 0 12px;
+    }
+
+    /* ISSUE 2 — Role context banner */
+    .role-context-banner {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px; font-size: 0.75rem; color: var(--muted);
+    }
+    .role-context-value {
+      background: rgba(11,94,87,0.08); color: var(--accent);
+      padding: 3px 12px; border-radius: 999px; font-weight: 700;
+      font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase;
+      border: 1px solid rgba(11,94,87,0.18);
+    }
+
+    /* ISSUE 3 — Sticky stage column + colored stage badges */
+    #candidateMatches .candidate-table-wrap,
+    #candidateMatches table,
+    #recordsTable table {
+      table-layout: auto;
+    }
+    #candidateMatches th:last-child, #candidateMatches td:last-child {
+      position: sticky; right: 0; background: var(--surface);
+      box-shadow: -4px 0 8px rgba(0,0,0,0.04);
+      min-width: 110px; font-weight: 600; z-index: 1;
+    }
+    .stage-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .stage-sourced    { background: #f3f4f6; color: #6b7280; }
+    .stage-mailed     { background: #f3f4f6; color: #4b5563; }
+    .stage-responded  { background: #fef3c7; color: #b45309; }
+    .stage-shortlist  { background: #ede9fe; color: #6d28d9; }
+    .stage-r1         { background: #dbeafe; color: #1d4ed8; }
+    .stage-r1-pass    { background: #d1fae5; color: #065f46; }
+    .stage-r1-reject  { background: #fee2e2; color: #b91c1c; }
+    .stage-r2         { background: #fef3c7; color: #d97706; }
+    .stage-r2-pass    { background: #dcfce7; color: #166534; }
+    .stage-r2-reject  { background: #fee2e2; color: #b91c1c; }
+    .stage-final-pass { background: #dcfce7; color: #166534; }
+    .stage-final-reject { background: #fee2e2; color: #b91c1c; }
+    .stage-final-hold { background: #fff3e0; color: #c2410c; }
+    .stage-offered    { background: #fdf4ff; color: #9333ea; }
+    .stage-accepted   { background: #dcfce7; color: #15803d; }
+    .stage-joined     { background: #d1fae5; color: #065f46; font-weight: 800; }
+
+    /* ISSUE 4 — Records meta row with column scroll hint */
+    .records-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px; font-size: 0.75rem; color: var(--muted);
+    }
+    .records-hint { font-style: italic; color: #b9c2cf; }
+
+    /* ISSUE 5 — Pay-range unit warning */
+    .pay-range-note {
+      margin-top: 8px; font-size: 0.68rem; color: #b45309;
+      background: #fffbeb; border: 1px solid #fde68a;
+      border-radius: 6px; padding: 6px 9px; line-height: 1.45; text-align: left;
+    }
+
+    /* ISSUE 6 — Bottleneck benchmark band */
+    .insight-benchmark { margin-top: 10px; font-size: 0.72rem; }
+    .benchmark-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .benchmark-label { font-size: 0.68rem; color: var(--muted); white-space: nowrap; }
+    .benchmark-track {
+      flex: 1; height: 6px; background: #e5e7eb; border-radius: 999px; position: relative;
+    }
+    .benchmark-fill {
+      height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.4s;
+    }
+    .benchmark-marker {
+      position: absolute; top: -3px; width: 2px; height: 12px; background: #6b7280;
+    }
+    .benchmark-value { font-size: 0.68rem; font-weight: 700; color: var(--text); }
+    .benchmark-verdict {
+      padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; line-height: 1.4;
+    }
+    .benchmark-verdict.healthy { background: #dcfce7; color: #166534; }
+    .benchmark-verdict.warn    { background: #fef3c7; color: #92400e; }
+    .benchmark-verdict.critical{ background: #fee2e2; color: #b91c1c; }
+
+    /* ISSUE 7 — Rich empty state */
+    .empty-state-rich {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 32px 24px; text-align: center; color: #9ca3af; gap: 8px;
+      border: 1px dashed var(--border); border-radius: 12px;
+    }
+    .empty-icon { font-size: 2rem; line-height: 1; }
+    .empty-title { font-size: 0.95rem; font-weight: 700; color: #4b5563; }
+    .empty-desc { font-size: 0.78rem; line-height: 1.5; max-width: 320px; }
+    .empty-desc strong { color: var(--accent); }
+
+    /* ISSUE 8 — Date range reversed warning */
+    .date-warning {
+      display: inline-block; font-size: 0.68rem; color: #b45309;
+      background: #fffbeb; border: 1px solid #fde68a;
+      border-radius: 4px; padding: 1px 8px; margin-top: 4px;
+    }
+
+    /* ISSUE 9 — Contract-pipeline group label */
+    .kpi-group-label {
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em;
+      color: var(--muted); text-transform: uppercase;
+      margin: 24px 0 10px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ISSUE 10 — Single-job breadcrumb */
+    .job-breadcrumb {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 14px; font-size: 0.82rem; color: var(--muted);
+    }
+    .back-to-all-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 12px; font-size: 0.78rem;
+      cursor: pointer; color: var(--accent); font-weight: 700;
+      transition: background 0.15s; font-family: inherit;
+    }
+    .back-to-all-btn:hover { background: rgba(11,94,87,0.08); }
+    .breadcrumb-sep { color: var(--border); }
+    .breadcrumb-current { font-weight: 700; color: var(--accent); }
+  `;
+  const style = document.createElement('style');
+  style.textContent = css;
+  document.head.appendChild(style);
+})();
+
+// PM-1: Wrap the tab nav with scroll arrows + fade gradients
+(function setupTabScrolling() {
+  const nav = document.getElementById('mainTabs');
+  if (!nav || nav.parentElement.classList.contains('tab-bar-wrapper')) return;
+  const wrapper = document.createElement('div');
+  wrapper.className = 'tab-bar-wrapper';
+  nav.parentElement.insertBefore(wrapper, nav);
+
+  const leftBtn = document.createElement('button');
+  leftBtn.className = 'tab-scroll-btn tab-scroll-left';
+  leftBtn.innerHTML = '&#8249;';
+  leftBtn.setAttribute('aria-label', 'Scroll tabs left');
+
+  const rightBtn = document.createElement('button');
+  rightBtn.className = 'tab-scroll-btn tab-scroll-right';
+  rightBtn.innerHTML = '&#8250;';
+  rightBtn.setAttribute('aria-label', 'Scroll tabs right');
+
+  const fadeR = document.createElement('div'); fadeR.className = 'tab-fade-right';
+  const fadeL = document.createElement('div'); fadeL.className = 'tab-fade-left';
+  fadeL.style.display = 'none';
+
+  wrapper.appendChild(leftBtn);
+  wrapper.appendChild(nav);
+  wrapper.appendChild(fadeL);
+  wrapper.appendChild(fadeR);
+  wrapper.appendChild(rightBtn);
+
+  function updateArrows() {
+    const max = nav.scrollWidth - nav.clientWidth;
+    const x = nav.scrollLeft;
+    leftBtn.disabled = x <= 2;
+    rightBtn.disabled = x >= max - 2;
+    fadeL.style.display = x > 2 ? '' : 'none';
+    fadeR.style.display = x < max - 2 ? '' : 'none';
+  }
+  leftBtn.addEventListener('click', () => { nav.scrollBy({ left: -200, behavior: 'smooth' }); });
+  rightBtn.addEventListener('click', () => { nav.scrollBy({ left: 200, behavior: 'smooth' }); });
+  nav.addEventListener('scroll', updateArrows);
+  window.addEventListener('resize', updateArrows);
+  setTimeout(updateArrows, 200);
+})();
+
+// PM-2: Role context banner above the tab bar
+(function setupRoleContextBanner() {
+  const wrapper = document.querySelector('.tab-bar-wrapper');
+  if (!wrapper || document.getElementById('roleContextBanner')) return;
+  const banner = document.createElement('div');
+  banner.className = 'role-context-banner';
+  banner.id = 'roleContextBanner';
+  banner.innerHTML = '<span>Viewing as:</span><span class="role-context-value" id="roleContextValue">All Roles (Admin)</span>';
+  wrapper.parentElement.insertBefore(banner, wrapper);
+})();
+function updateRoleContextBanner() {
+  const valEl = document.getElementById('roleContextValue');
+  if (!valEl) return;
+  const cfg = ROLE_CONFIG[currentViewRole] || ROLE_CONFIG.all;
+  valEl.textContent = cfg.label;
+}
+const _pmApplyRoleView = applyRoleView;
+applyRoleView = function() {
+  _pmApplyRoleView();
+  updateRoleContextBanner();
+};
+applyRoleView();
+
+// PM-3: Replace stage-chip with semantic stage-badge — re-render
+//       candidate matches table after each render with badges + sticky col
+function stageBadge(stageText) {
+  const s = (stageText || '').toLowerCase();
+  let cls = 'stage-sourced';
+  if (s.includes('joined')) cls = 'stage-joined';
+  else if (s.includes('accepted')) cls = 'stage-accepted';
+  else if (s.includes('offered')) cls = 'stage-offered';
+  else if (s.includes('final selected')) cls = 'stage-final-pass';
+  else if (s.includes('final rejected')) cls = 'stage-final-reject';
+  else if (s.includes('final on hold')) cls = 'stage-final-hold';
+  else if (s.includes('r2 selected')) cls = 'stage-r2-pass';
+  else if (s.includes('r2 rejected')) cls = 'stage-r2-reject';
+  else if (s.startsWith('r2')) cls = 'stage-r2';
+  else if (s.includes('r1 selected')) cls = 'stage-r1-pass';
+  else if (s.includes('r1 rejected')) cls = 'stage-r1-reject';
+  else if (s.startsWith('r1')) cls = 'stage-r1';
+  else if (s.includes('shortlisted')) cls = 'stage-shortlist';
+  else if (s.includes('responded')) cls = 'stage-responded';
+  else if (s.includes('mailed')) cls = 'stage-mailed';
+  return `<span class="stage-badge ${cls}">${escapeHtml(stageText)}</span>`;
+}
+// Override renderCandidatesList (added in earlier bug-fix block) to use stage badges
+renderCandidatesList = function(rows) {
+  const cm = document.getElementById('candidateMatches');
+  if (!cm) return;
+  cm.innerHTML = rows.length
+    ? `<div class="candidate-table-wrap"><table class="mini-table">
+        <thead><tr><th>Candidate</th><th>Role</th><th>Source</th><th>Phone</th><th>Stage</th></tr></thead>
+        <tbody>${rows.map(r => `<tr>
+          <td><div class="candidate-name">${escapeHtml(r['Full Name']||'Unnamed')}</div>
+              <div class="candidate-meta">${escapeHtml(r['Email']||'No email')}</div></td>
+          <td>${escapeHtml(r.Role||'Unknown role')}</td>
+          <td>${escapeHtml(r['Pool Name']||'-')}</td>
+          <td>${escapeHtml(r['Contact Number']||'-')}</td>
+          <td>${stageBadge(latestStage(r))}</td>
+        </tr>`).join('')}</tbody></table></div>`
+    : '<div class="empty-state-rich"><div class="empty-icon">🔍</div><div class="empty-title">No matching candidates</div><div class="empty-desc">Adjust filters or load more candidate data.</div></div>';
+};
+
+// PM-3b/PM-4: Records meta row + ensure stage column gets badge styling
+const _pmRenderDashboard = renderDashboard;
+renderDashboard = function(metrics, fileName, sourceTotal) {
+  _pmRenderDashboard(metrics, fileName, sourceTotal);
+
+  // Records meta row above the records table
+  const recEl = document.getElementById('recordsTable');
+  if (recEl) {
+    const card = recEl.closest('.card');
+    if (card && !card.querySelector('.records-meta')) {
+      const meta = document.createElement('div');
+      meta.className = 'records-meta';
+      meta.innerHTML = `<span id="recordsCount"></span><span class="records-hint">← Scroll table to see all columns →</span>`;
+      card.insertBefore(meta, recEl);
+    }
+    const cnt = document.getElementById('recordsCount');
+    if (cnt) cnt.textContent = `Showing ${formatNum(metrics.rows.length)} of ${formatNum(metrics.rows.length)} records`;
+
+    // Re-style stage cells inside records as badges (last column already by markup)
+    recEl.querySelectorAll('.stage-chip').forEach(chip => {
+      chip.outerHTML = stageBadge(chip.textContent);
+    });
+  }
+
+  // PM-5: Pay-range unit-context warning under Pay Range card
+  const ksEl = document.getElementById('keyStats');
+  if (ksEl) {
+    ksEl.querySelectorAll('.card').forEach(card => {
+      const title = card.querySelector('.card-title');
+      if (!title || !/Pay Range/i.test(title.textContent)) return;
+      if (card.querySelector('.pay-range-note')) return;
+      const note = document.createElement('div');
+      note.className = 'pay-range-note';
+      note.innerHTML = '⚠ Values are as-entered in the source sheet. Verify unit (LPA / monthly / daily / hourly) before benchmarking.';
+      card.appendChild(note);
+    });
+  }
+
+  // PM-6: Bottleneck card benchmark band
+  const ag = document.getElementById('analyticsGrid');
+  if (ag) {
+    const bottleneckCard = [...ag.children].find(el => /Bottleneck/i.test(el.querySelector('.insight-kicker')?.textContent || ''));
+    const ins = getStepInsights(metrics);
+    if (bottleneckCard && ins.bottleneck && !bottleneckCard.querySelector('.insight-benchmark')) {
+      const drop = ins.bottleneck.drop;
+      // Heuristic benchmarks per stage type
+      let bench = 50, label = 'Industry avg drop at this stage';
+      const lbl = ins.bottleneck.label.toLowerCase();
+      if (lbl.includes('shortlist')) { bench = 60; label = 'Industry avg drop at shortlist'; }
+      else if (lbl.includes('respond')) { bench = 70; label = 'Industry avg drop at outreach response'; }
+      else if (lbl.includes('r1')) { bench = 50; label = 'Industry avg drop at R1'; }
+      else if (lbl.includes('r2')) { bench = 40; label = 'Industry avg drop at R2'; }
+      else if (lbl.includes('offer')) { bench = 15; label = 'Industry avg drop at offer'; }
+      else if (lbl.includes('joined') || lbl.includes('join')) { bench = 10; label = 'Industry avg drop at joining'; }
+      const delta = drop - bench;
+      let verdictCls = 'healthy', verdictText = `${Math.abs(delta).toFixed(0)}pp ${delta >= 0 ? 'above' : 'below'} average — within expected range`;
+      if (delta > 15) { verdictCls = 'critical'; verdictText = `${delta.toFixed(0)}pp above average — review criteria/communication at this stage`; }
+      else if (delta > 5) { verdictCls = 'warn'; verdictText = `${delta.toFixed(0)}pp above average — worth a closer look`; }
+      else if (delta < -10) { verdictCls = 'healthy'; verdictText = `${Math.abs(delta).toFixed(0)}pp better than average — strong performance`; }
+      bottleneckCard.insertAdjacentHTML('beforeend', `
+        <div class="insight-benchmark">
+          <div class="benchmark-bar">
+            <span class="benchmark-label">${escapeHtml(label)}</span>
+            <div class="benchmark-track">
+              <div class="benchmark-fill" style="width:${Math.min(drop, 100).toFixed(0)}%;"></div>
+              <div class="benchmark-marker" style="left:${Math.min(bench, 100).toFixed(0)}%;" title="Benchmark: ~${bench}%"></div>
+            </div>
+            <span class="benchmark-value">~${bench}%</span>
+          </div>
+          <div class="benchmark-verdict ${verdictCls}">${escapeHtml(verdictText)}</div>
+        </div>
+      `);
+    }
+  }
+
+  // PM-7: Replace plain "No data" Sources/Joined/Department/Degree etc. with rich empty state
+  const richEmpty = (icon, title, desc) =>
+    `<div class="empty-state-rich"><div class="empty-icon">${icon}</div><div class="empty-title">${escapeHtml(title)}</div><div class="empty-desc">${desc}</div></div>`;
+  const c = metrics.counts;
+  const joinedBy = document.getElementById('joinedBySource');
+  if (joinedBy && c.joined === 0) {
+    joinedBy.innerHTML = richEmpty('📭', 'No join data yet', `This section populates once candidates reach <strong>Joined</strong>. Currently 0 of ${formatNum(c.total)} candidates have joined.`);
+  }
+  const shift = document.getElementById('shiftDistribution');
+  if (shift && shift.querySelector('.no-data')) {
+    shift.innerHTML = richEmpty('🕒', 'No shift data', 'Add a Shift / Availability column to see how candidates self-categorise.');
+  }
+  ['degreeTypes', 'departmentTypes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.querySelector('.no-data')) {
+      el.innerHTML = richEmpty('🎓', 'No academic data', 'Populate Degree / Department fields in the source sheet to see this breakdown.');
+    }
+  });
+
+  // PM-8: Date-range reversal warning
+  const period = document.getElementById('headerPeriod');
+  if (period && metrics.timeline && metrics.timeline.length >= 2) {
+    const first = metrics.timeline[0]; const last = metrics.timeline.at(-1);
+    const parse = s => {
+      const m = String(s.label || '').match(/(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
+      if (!m) return null;
+      const yr = m[3].length === 2 ? '20' + m[3] : m[3];
+      return new Date(parseInt(yr), parseInt(m[2]) - 1, parseInt(m[1]));
+    };
+    const a = parse(last); const b = parse(first);
+    if (a && b && a > b) {
+      if (!document.getElementById('dateWarning')) {
+        const warn = document.createElement('span');
+        warn.id = 'dateWarning';
+        warn.className = 'date-warning';
+        warn.textContent = '⚠ Date range may be reversed — verify source data';
+        period.parentElement.appendChild(warn);
+      }
+    } else {
+      const w = document.getElementById('dateWarning');
+      if (w) w.remove();
+    }
+  }
+
+  // PM-10: Single-job breadcrumb
+  const main = document.querySelector('.dashboard-main');
+  if (main) {
+    let crumb = document.getElementById('jobBreadcrumb');
+    if (selectedRole) {
+      if (!crumb) {
+        crumb = document.createElement('div');
+        crumb.id = 'jobBreadcrumb';
+        crumb.className = 'job-breadcrumb';
+        crumb.innerHTML = `<button class="back-to-all-btn" id="backToAllRoles">← All Hiring Roles</button><span class="breadcrumb-sep">/</span><span class="breadcrumb-current" id="breadcrumbJobName"></span>`;
+        main.insertBefore(crumb, main.firstChild);
+        document.getElementById('backToAllRoles').addEventListener('click', () => {
+          if (typeof selectRole === 'function') {
+            selectRole('');
+          } else {
+            selectedRole = '';
+            const url = lastConnectedUrl;
+            if (url) document.getElementById('connectBtn').click();
+          }
+        });
+      }
+      crumb.style.display = '';
+      const nameEl = document.getElementById('breadcrumbJobName');
+      if (nameEl) nameEl.textContent = selectedRole;
+    } else if (crumb) {
+      crumb.style.display = 'none';
+    }
+  }
+};
+
+// PM-9: Add candidates + insights tabs to Freelancer/Ops role view, and a
+//       prominent Contract Pipeline label inside the existing freelancer KPIs
+ROLE_CONFIG.freelancer_ops.tabs = ['overview', 'candidates', 'records', 'insights'];
+(function addContractPipelineLabel() {
+  const flKpis = document.getElementById('flKpis');
+  if (!flKpis || flKpis.previousElementSibling?.classList.contains('kpi-group-label')) return;
+  const lbl = document.createElement('div');
+  lbl.className = 'kpi-group-label';
+  lbl.textContent = 'Contract Pipeline';
+  lbl.id = 'contractPipelineLabel';
+  flKpis.parentElement.insertBefore(lbl, flKpis);
+})();
+applyRoleView();
+
 // G9. Generic header / branding
 (function genericiseBranding() {
   const titleEl = document.querySelector('h1');
