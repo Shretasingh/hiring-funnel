@@ -100,13 +100,19 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 6px;
+    flex-wrap: nowrap;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc transparent;
     background: rgba(255,255,255,0.78);
     box-shadow: var(--shadow-soft);
     position: sticky;
     top: 8px;
     z-index: 5;
   }
+  .tabs::-webkit-scrollbar { height: 4px; }
+  .tabs::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
   .tab-btn {
     background: none; border: none; cursor: pointer;
     color: var(--muted);
@@ -121,7 +127,37 @@
     margin-bottom: 0;
     transition: all 0.2s;
     white-space: nowrap;
+    flex-shrink: 0;
   }
+  /* Tabular numerals to avoid superscript-like ligatures */
+  body, .stat-value, .kpi-number, .kpi-value, .conv-rate, .funnel-count, .funnel-pct,
+  .metric-large, .records-table, .mini-table, [class*="stat-"] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "liga" 0;
+    -webkit-font-feature-settings: "tnum" 1, "liga" 0;
+  }
+  /* Status badges */
+  .status-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+  .status-healthy { background: #e8f5e9; color: #2e7d32; border-color: rgba(46,125,50,0.18); }
+  .status-watch   { background: #ede9fe; color: #6d28d9; border-color: rgba(109,40,217,0.18); }
+  .status-warn    { background: #fff3e0; color: #e65100; border-color: rgba(230,81,0,0.18); }
+  .status-critical{ background: #ffebee; color: #c62828; border-color: rgba(198,40,40,0.18); }
+  /* Pay range pill */
+  .pay-range-value { font-size: 1.6rem; font-weight: 800; color: #c2185b; letter-spacing: 0.02em; font-family: 'Space Grotesk', sans-serif; }
+  /* Empty-state fallback inside any panel */
+  .empty-state { padding: 40px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 12px; }
+  /* Horizontal scroll wrappers for wide tables */
+  .records-table-wrap, .candidate-table-wrap, .role-compare-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+  .records-table-wrap table, .candidate-table-wrap table, .role-compare-wrap table { min-width: 700px; }
+  #roundPerformance { overflow-x: auto; }
+  #roundPerformance table { min-width: 560px; }
+  /* Show-all toggle button */
+  .show-all-btn { padding: 10px 24px; background: var(--accent); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+  .show-all-btn:hover { background: #0a4a45; }
   .tab-btn:hover { color: var(--text); }
   .tab-btn.active { color: #fff; background: var(--accent); box-shadow: 0 8px 18px rgba(11,94,87,0.18); }
 
@@ -1090,10 +1126,11 @@
   <div class="panel" id="panel-sources">
     <div class="section-title">Supply Source Analysis</div>
     <div class="kpi-row" id="sourceKpis"></div>
-    <div class="section-title">Campus Pools Breakdown</div>
-    <div class="card" style="margin-bottom:32px;"><div class="card-title">College-wise candidate count</div><div class="bar-chart" id="campusBreakdown"></div></div>
+    <div class="section-title" id="campusTitle">Campus Pools Breakdown</div>
+    <div class="card" id="campusCard" style="margin-bottom:32px;"><div class="card-title">College-wise candidate count</div><div class="bar-chart" id="campusBreakdown"></div></div>
     <div class="section-title">Source Quality — Who Actually Joined</div>
     <div class="card"><div class="card-title">Joining numbers by source</div><div class="bar-chart" id="joinedBySource"></div></div>
+    <div id="sourcesEmptyState" class="empty-state" style="display:none; margin-top:18px;">No source data available for this view.</div>
   </div>
 
   <div class="panel" id="panel-assessments">
@@ -2926,11 +2963,19 @@ renderDashboard = function(metrics, fileName, sourceTotal) {
       : '<div class="no-data" style="grid-column:1/-1;">Not enough data for conversion rates yet</div>';
   }
 
-  // Sources tab — hide Campus card when not relevant
-  const campusEl = document.getElementById('campusBreakdown');
-  if (campusEl) {
-    const campusCard = campusEl.closest('.card');
-    if (campusCard) campusCard.parentElement.style.display = metrics.campusBreakdown.length > 0 ? '' : 'none';
+  // Sources tab — hide ONLY the campus title + card when no campus data,
+  // never the whole panel; show empty-state if nothing renders at all.
+  const campusCard = document.getElementById('campusCard');
+  const campusTitle = document.getElementById('campusTitle');
+  const hasCampus = (metrics.campusBreakdown && metrics.campusBreakdown.length > 0);
+  if (campusCard) campusCard.style.display = hasCampus ? '' : 'none';
+  if (campusTitle) campusTitle.style.display = hasCampus ? '' : 'none';
+  const sourcesEmpty = document.getElementById('sourcesEmptyState');
+  if (sourcesEmpty) {
+    const anySources = (metrics.sourceBreakdown && metrics.sourceBreakdown.length > 0)
+      || hasCampus
+      || (metrics.joinedBySource && metrics.joinedBySource.length > 0);
+    sourcesEmpty.style.display = anySources ? 'none' : '';
   }
 };
 
@@ -3186,6 +3231,150 @@ renderDashboard = function(metrics, fileName, sourceTotal) {
   style.textContent = css;
   document.head.appendChild(style);
 })();
+
+// ═══════════════════════════════════════════════════════════════
+// BUG FIXES — Status badges, %>100 cap, pay format, candidates page
+// ═══════════════════════════════════════════════════════════════
+
+// B1. Stage table Status column: turn meaningless colour names into
+//     semantic badges driven by the actual drop-off %.
+function severityFromDrop(drop) {
+  if (drop >= 50) return { cls: 'status-critical', text: 'Critical' };
+  if (drop >= 25) return { cls: 'status-warn',     text: 'High Drop' };
+  if (drop >= 10) return { cls: 'status-watch',    text: 'Watch' };
+  return { cls: 'status-healthy', text: 'Healthy' };
+}
+
+// B2. Pct cap helper — clamps display values that exceed 100 %, with a
+//     small warning glyph indicating the data crosses stages weirdly.
+function pctCap(num, denom) {
+  if (!denom) return '0%';
+  const r = (num / denom) * 100;
+  if (r > 100) return `${Math.min(r, 100).toFixed(1)}% ⚠`;
+  return r.toFixed(1) + '%';
+}
+
+// B3. Wrap renderDashboard once more for: capped conv-grid, semantic
+//     status badges, formatted Pay Range, candidates show-all button.
+const _bugFixRenderDashboard = renderDashboard;
+renderDashboard = function(metrics, fileName, sourceTotal) {
+  _bugFixRenderDashboard(metrics, fileName, sourceTotal);
+  const c = metrics.counts;
+
+  // B3a. Re-render stage table with semantic badges + drop-tinted rows
+  const tbody = document.getElementById('stageTableBody');
+  if (tbody && metrics.funnel) {
+    tbody.innerHTML = metrics.funnel.map((d, i) => {
+      const prev = i ? metrics.funnel[i-1].count : d.count;
+      const dropPct = i ? (Math.max(prev - d.count, 0) / Math.max(prev, 1)) * 100 : 0;
+      const dropTxt = i ? `${dropPct.toFixed(1)}%` : '–';
+      const sev = i ? severityFromDrop(dropPct) : { cls: 'status-healthy', text: 'Start' };
+      const tint = dropPct >= 50 ? 'background:rgba(216,63,91,0.06);'
+                : dropPct >= 25 ? 'background:rgba(198,146,20,0.05);' : '';
+      return `<tr style="${tint}"><td>${escapeHtml(d.label)}</td><td>${formatNum(d.count)}</td><td>${pct(d.count, c.total)}</td><td>${dropTxt}</td><td><span class="status-badge ${sev.cls}">${sev.text}</span></td></tr>`;
+    }).join('');
+  }
+
+  // B3b. Cap any conv-grid card whose value exceeds 100 % (R2→Final etc.)
+  document.querySelectorAll('#conversionGrid .conv-card').forEach(card => {
+    const rateEl = card.querySelector('.conv-rate');
+    if (!rateEl) return;
+    const m = rateEl.textContent.match(/([\d.]+)%/);
+    if (!m) return;
+    const v = parseFloat(m[1]);
+    if (v > 100) {
+      rateEl.textContent = '100%';
+      rateEl.title = `Raw value was ${v.toFixed(1)}% — some candidates skipped this stage; capped for display.`;
+      rateEl.style.borderBottom = '2px dashed #e65100';
+      rateEl.insertAdjacentHTML('afterend', '<div class="muted-line" style="font-size:11px;color:#e65100;">⚠ stage skipped by some candidates</div>');
+    }
+  });
+
+  // B3c. Format Pay Range stat as a proper labelled pill
+  const ksEl = document.getElementById('keyStats');
+  if (ksEl && metrics.payRange) {
+    const cards = ksEl.querySelectorAll('.card');
+    cards.forEach(card => {
+      const titleEl = card.querySelector('.card-title');
+      if (titleEl && /Pay Range/i.test(titleEl.textContent)) {
+        titleEl.textContent = 'Pay Range';
+        const valueEl = card.querySelector('.metric-large');
+        if (valueEl) {
+          valueEl.classList.add('pay-range-value');
+          valueEl.innerHTML = `<span title="Values as entered in source data">${formatNum(metrics.payRange.min)}–${formatNum(metrics.payRange.max)}</span>`;
+        }
+        const subEl = card.querySelector('.muted-line');
+        if (subEl) {
+          const cnt = metrics.payRateData.reduce((s, i) => s + i.count, 0);
+          subEl.innerHTML = `Avg: <strong>${metrics.payRange.avg.toFixed(1)}</strong> · ${formatNum(cnt)} stated`;
+        }
+      }
+    });
+  }
+
+  // B3d. Candidates panel — add show-all toggle (renderAnalytics shows 8)
+  const candWrap = document.getElementById('candidateMatches');
+  if (candWrap && metrics.rows.length > 8) {
+    if (!document.getElementById('showAllCandidatesBtn')) {
+      const btn = document.createElement('button');
+      btn.id = 'showAllCandidatesBtn';
+      btn.className = 'show-all-btn';
+      btn.style.marginTop = '16px';
+      btn.dataset.expanded = '0';
+      const total = metrics.rows.length;
+      btn.textContent = `Show all ${formatNum(total)} candidates`;
+      btn.addEventListener('click', () => {
+        const expanded = btn.dataset.expanded === '1';
+        const limit = expanded ? 8 : metrics.rows.length;
+        renderCandidatesList(metrics.rows.slice(0, limit));
+        btn.dataset.expanded = expanded ? '0' : '1';
+        btn.textContent = expanded ? `Show all ${formatNum(total)} candidates` : `Collapse to first 8`;
+      });
+      const wrapDiv = document.createElement('div');
+      wrapDiv.style.textAlign = 'center';
+      wrapDiv.appendChild(btn);
+      candWrap.parentElement.appendChild(wrapDiv);
+    } else {
+      const btn = document.getElementById('showAllCandidatesBtn');
+      btn.dataset.expanded = '0';
+      btn.textContent = `Show all ${formatNum(metrics.rows.length)} candidates`;
+    }
+  }
+};
+
+// B3e. Helper used by the show-all button — re-renders Candidate Matches
+function renderCandidatesList(rows) {
+  const cm = document.getElementById('candidateMatches');
+  if (!cm) return;
+  cm.innerHTML = rows.length
+    ? `<div class="candidate-table-wrap"><table class="mini-table">
+        <thead><tr><th>Candidate</th><th>Role</th><th>Source</th><th>Phone</th><th>Stage</th></tr></thead>
+        <tbody>${rows.map(r=>`<tr>
+          <td><div class="candidate-name">${escapeHtml(r['Full Name']||'Unnamed')}</div>
+              <div class="candidate-meta">${escapeHtml(r['Email']||'No email')}</div></td>
+          <td>${escapeHtml(r.Role||'Unknown role')}</td>
+          <td>${escapeHtml(r['Pool Name']||'-')}</td>
+          <td>${escapeHtml(r['Contact Number']||'-')}</td>
+          <td><span class="stage-chip">${escapeHtml(latestStage(r))}</span></td>
+        </tr>`).join('')}</tbody></table></div>`
+    : '<div class="no-data">No matching candidates</div>';
+}
+
+// B4. Active tab on role switch — applyRoleView already calls switchTab
+//     when the active tab gets hidden, but if NO tab is currently active
+//     (initial empty state), force the first visible to be active.
+const _bugApplyRoleView = applyRoleView;
+applyRoleView = function() {
+  _bugApplyRoleView();
+  const anyActive = document.querySelector('#mainTabs .tab-btn.active:not(.role-hidden)');
+  if (!anyActive) {
+    const firstVisible = document.querySelector('#mainTabs .tab-btn:not(.role-hidden)');
+    if (firstVisible) {
+      switchTab(firstVisible.getAttribute('data-tab'), firstVisible);
+    }
+  }
+};
+applyRoleView();
 
 // G9. Generic header / branding
 (function genericiseBranding() {
