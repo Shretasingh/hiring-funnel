@@ -166,8 +166,32 @@
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
   /* GRID LAYOUTS */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 32px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 32px; }
+  .auto-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 28px; align-items: stretch; }
+  .auto-grid .card { min-height: 0; }
+  .round-section { margin-bottom: 36px; }
+  .round-header {
+    display: flex; align-items: baseline; gap: 12px; margin: 8px 0 16px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .round-header .round-label {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px;
+    color: var(--accent); letter-spacing: -0.01em;
+  }
+  .round-header .round-meta { color: var(--muted); font-size: 13px; }
+  .method-card {
+    border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px;
+    background: var(--surface); box-shadow: var(--shadow-soft);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .method-card .method-title { font-weight: 700; font-size: 15px; color: var(--text); }
+  .method-card .method-stats { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+  .method-card .method-stat { display: flex; flex-direction: column; gap: 2px; }
+  .method-card .method-stat-label { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+  .method-card .method-stat-value { font-weight: 700; font-size: 18px; color: var(--text); font-family: 'Space Grotesk', sans-serif; }
+  .method-card .method-bar { height: 6px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .method-card .method-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.4s; }
   @media(max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
   .card {
@@ -1079,18 +1103,30 @@
       <div class="card"><div class="card-title">Unified R1 & Round Layers</div><div id="roundPerformance"></div></div>
       <div class="card"><div class="card-title">Round Outcome Mix</div><div class="bar-chart" id="roundOutcomeMix"></div></div>
     </div>
-    <div class="grid-2" id="methodCardsRow">
-      <div class="card" id="r1MethodCard"><div class="card-title">R1 Method Breakdown</div><div class="bar-chart" id="r1MethodChart"></div></div>
-      <div class="card" id="r2MethodCard"><div class="card-title">R2 Method Breakdown</div><div class="bar-chart" id="r2MethodChart"></div></div>
+    <!-- R1 section -->
+    <div class="round-section" id="r1Section">
+      <div class="round-header"><div class="round-label">R1</div><div class="round-meta" id="r1HeaderMeta"></div></div>
+      <div class="kpi-row" id="r1Kpis" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom:18px;"></div>
+      <div class="auto-grid" id="r1MethodsGrid"></div>
     </div>
-    <div class="grid-2" id="legacyAssessRow" style="display:none;">
+
+    <!-- R2 section -->
+    <div class="round-section" id="r2Section">
+      <div class="round-header"><div class="round-label">R2</div><div class="round-meta" id="r2HeaderMeta"></div></div>
+      <div class="kpi-row" id="r2Kpis" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom:18px;"></div>
+      <div class="auto-grid" id="r2MethodsGrid"></div>
+    </div>
+
+    <!-- Legacy fallback (only shown when sheet has Fabric/Video columns) -->
+    <div class="auto-grid" id="legacyAssessRow" style="display:none;">
       <div class="card"><div class="card-title">Assessment / Test Layer</div><div class="bar-chart" id="fabricResults"></div></div>
       <div class="card"><div class="card-title">Video / Submission Layer</div><div class="muted-line" id="videoSummary" style="margin-bottom:12px;"></div><div class="bar-chart" id="videoResults"></div></div>
     </div>
-    <div class="section-title">Interview / Later Round Results</div>
-    <div class="grid-2">
-      <div class="card"><div class="card-title">Round 1 / First Evaluation</div><div id="r1Results"></div></div>
-      <div class="card"><div class="card-title">Round 2 / Final Evaluation</div><div class="bar-chart" id="r2Results"></div></div>
+
+    <!-- Hidden legacy targets retained so existing render code can still write into them harmlessly -->
+    <div style="display:none;">
+      <div id="r1MethodChart"></div><div id="r2MethodChart"></div><div id="r1Results"></div><div id="r2Results"></div>
+      <div id="r1MethodCard"></div><div id="r2MethodCard"></div><div id="methodCardsRow"></div>
     </div>
   </div>
 
@@ -2056,7 +2092,7 @@ function roleOverviewKpis(metrics) {
     default: return [
       renderKpi('Total Supply',formatNum(c.total),'Candidates across selected roles','var(--accent)'),
       renderKpi('Shortlisted',formatNum(c.shortlisted),pct(c.shortlisted,c.total)+' shortlist rate','#7c6af7'),
-      renderKpi('R1 / Assessment',formatNum(metrics.primaryR1.completed||c.fabricAttended||c.videoSubmitted),metrics.primaryR1.label.replace('R1 - ',''),'var(--accent2)'),
+      renderKpi('R1 Completed',formatNum(metrics.primaryR1.completed||c.fabricAttended||c.videoSubmitted),pct(metrics.primaryR1.completed,metrics.primaryR1.invited)+' attendance','var(--accent2)'),
       renderKpi('Round Passed',formatNum(metrics.primaryR1.passed||c.videoCleared||c.fabricPass),pct(metrics.primaryR1.passed||c.videoCleared||c.fabricPass,metrics.primaryR1.tracked||c.videoSubmitted||c.fabricAttended)+' pass rate','var(--accent4)'),
       renderKpi('Offers Shared',formatNum(c.offersShared),'After interviews','var(--success)'),
       renderKpi('Joined',formatNum(c.joined),pct(c.joined,c.total)+' hire rate','#00d4ff'),
@@ -2561,8 +2597,8 @@ function renderSteps(metrics) {
     c.responded > 0 ? ['done','Candidate Response','Interested candidates confirmed availability.',`${formatNum(c.responded)} responded (${pct(c.responded, c.mailSent || c.total)})`] : null,
     c.fabricInvited > 0 ? ['done','Assessment / Test Layer',`${primary.label} — first evaluation layer.`,`${formatNum(c.fabricInvited)} invited · ${formatNum(c.fabricAttended)} completed`] : null,
     c.videoInvited > 0 ? ['done','Video / Submission Layer','Optional video or assignment round.',`${formatNum(c.videoInvited)} invited · ${formatNum(c.videoSubmitted)} submitted`] : null,
-    (primary.invited > 0 || primary.tracked > 0) ? ['done','R1 — First Evaluation',`${primary.label}: first formal evaluation stage.`,`${formatNum(primary.tracked)} tracked · ${formatNum(primary.passed)} passed (${pct(primary.passed, primary.tracked)})`] : null,
-    c.r2Invited > 0 ? ['done','R2 — Final Evaluation','Final round: panel, technical, or HR interview.',`${formatNum(c.r2Invited)} invited · ${formatNum(c.r2Selected)} selected`] : null,
+    (primary.invited > 0 || primary.tracked > 0) ? ['done','R1','First evaluation round (any method).',`${formatNum(primary.tracked)} tracked · ${formatNum(primary.passed)} passed (${pct(primary.passed, primary.tracked)})`] : null,
+    c.r2Invited > 0 ? ['done','R2','Second evaluation round (any method).',`${formatNum(c.r2Invited)} invited · ${formatNum(c.r2Selected)} selected`] : null,
     c.finalSelected > 0 ? ['done','Final Decision',`${formatNum(c.finalSelected)} selected · ${formatNum(c.finalRejected)} rejected.`,'Decisions recorded'] : null,
     c.offersShared > 0 ? ['done','Offer Roll-Out',`Offer letters shared and acceptance tracked.`,`${formatNum(c.offersShared)} offered · ${formatNum(c.offerAccepted)} accepted (${pct(c.offerAccepted, c.offersShared)})`] : null,
     c.joined > 0 ? ['active','Joining & Onboarding','Candidates join and documentation is processed.',`${formatNum(c.joined)} joined · ${formatNum(c.contractSigned)} contracts signed`] : null,
@@ -2651,75 +2687,144 @@ Object.assign(FIELD_ALIASES, {
   'R2 Method': ['R2_Method','R2 Method','Round 2 Method'],
 });
 
-// G2. Compute method breakdowns + extend metrics
+// G2. Compute method-level stats for R1 and R2
+function computeRoundMethodStats(rows, methodCol, statusCol, scoreCol) {
+  const groups = new Map();
+  rows.forEach(r => {
+    const m = normalize(r[methodCol]);
+    if (!hasValue(m)) return;
+    if (!groups.has(m)) groups.set(m, []);
+    groups.get(m).push(r);
+  });
+  return [...groups.entries()].map(([method, list]) => {
+    const tracked = list.filter(r => hasValue(r[statusCol])).length;
+    const passed = list.filter(r => isPositiveStatus(r[statusCol])).length;
+    const rejected = list.filter(r => isNegativeStatus(r[statusCol])).length;
+    const pending = list.filter(r => normLower(r[statusCol]) === 'on hold').length;
+    const scores = scoreCol ? list.map(r => parseFloat(r[scoreCol])).filter(n => !isNaN(n)) : [];
+    const avgScore = scores.length ? scores.reduce((s,n)=>s+n,0)/scores.length : null;
+    return { method, total: list.length, tracked, passed, rejected, pending, avgScore };
+  }).sort((a, b) => b.total - a.total);
+}
+
 const _genComputeMetrics = computeDashboardMetrics;
 computeDashboardMetrics = function(rows) {
   const m = _genComputeMetrics(rows);
   m.r1Methods = topN(countBy(rows, 'R1 Method'), 8);
   m.r2Methods = topN(countBy(rows, 'R2 Method'), 8);
+  m.r1MethodStats = computeRoundMethodStats(rows, 'R1 Method', 'R1 Status', 'R1 Score');
+  m.r2MethodStats = computeRoundMethodStats(rows, 'R2 Method', 'R2 Status', 'R2 Score');
   m.hasFabricVideo = rows.some(r => hasValue(r['Fabric Invited']) || hasValue(r['Fabric Status']) || hasValue(r['Video Invited']) || hasValue(r['Video Submitted']));
   m.hasAnnotation = m.annotation.length > 0;
   m.hasCheating = m.counts.cheatingTracked > 0;
   return m;
 };
 
-// G3. Generic R1 label — drop "Fabric AI + Video" wording when not applicable
+// G3. Strip "R1 - "/"R2 - "/"First Evaluation"/"Final Evaluation" wording → just R1/R2
+function shortRoundLabel(label) {
+  if (!label) return label;
+  let l = String(label).replace(/^R1\s*-\s*/i, '').replace(/^R2\s*-\s*/i, '');
+  l = l.replace(/First Evaluation/gi, 'R1').replace(/Final Evaluation/gi, 'R2');
+  return l;
+}
 const _genBuildUnifiedR1 = buildUnifiedR1Round;
 buildUnifiedR1Round = function(rows) {
   const r = _genBuildUnifiedR1(rows);
-  if (r.label === 'R1 - Fabric AI + Video') r.label = 'R1 - First Evaluation';
+  r.label = 'R1';
   return r;
 };
 
-// G4. Adaptive renderAssessments — show R1/R2 method charts when methods exist,
-//     fall back to legacy Fabric/Video panels only when that data is present
+// G4. Render per-method cards for R1/R2; sized to content via .auto-grid
+function renderMethodCard(stat, totalForBar) {
+  const passRate = stat.tracked > 0 ? (stat.passed / stat.tracked) * 100 : 0;
+  const sharePct = totalForBar > 0 ? (stat.total / totalForBar) * 100 : 0;
+  return `<div class="method-card">
+    <div class="method-title">${escapeHtml(stat.method)}</div>
+    <div class="method-stats">
+      <div class="method-stat"><div class="method-stat-label">Candidates</div><div class="method-stat-value">${formatNum(stat.total)}</div></div>
+      ${stat.tracked > 0 ? `<div class="method-stat"><div class="method-stat-label">Tracked</div><div class="method-stat-value">${formatNum(stat.tracked)}</div></div>` : ''}
+      ${stat.passed > 0 ? `<div class="method-stat"><div class="method-stat-label">Passed</div><div class="method-stat-value" style="color:var(--success);">${formatNum(stat.passed)}</div></div>` : ''}
+      ${stat.rejected > 0 ? `<div class="method-stat"><div class="method-stat-label">Rejected</div><div class="method-stat-value" style="color:var(--danger);">${formatNum(stat.rejected)}</div></div>` : ''}
+      ${stat.tracked > 0 ? `<div class="method-stat"><div class="method-stat-label">Pass Rate</div><div class="method-stat-value">${passRate.toFixed(1)}%</div></div>` : ''}
+      ${stat.avgScore !== null ? `<div class="method-stat"><div class="method-stat-label">Avg Score</div><div class="method-stat-value">${stat.avgScore.toFixed(2)}</div></div>` : ''}
+    </div>
+    <div class="method-bar"><div class="method-bar-fill" style="width:${Math.min(sharePct, 100).toFixed(1)}%;"></div></div>
+    <div class="muted-line">${sharePct.toFixed(1)}% of round</div>
+  </div>`;
+}
+
 const _genRenderAssessments = renderAssessments;
 renderAssessments = function(metrics) {
   _genRenderAssessments(metrics);
   const c = metrics.counts;
 
-  // Toggle method vs legacy rows
-  const hasMethods = metrics.r1Methods.length > 0 || metrics.r2Methods.length > 0;
-  const methodRow = document.getElementById('methodCardsRow');
-  const legacyRow = document.getElementById('legacyAssessRow');
-
-  if (hasMethods) {
-    if (methodRow) methodRow.style.display = '';
-    if (legacyRow) legacyRow.style.display = 'none';
-    // R1 method chart
-    if (metrics.r1Methods.length) {
-      renderBarChart('r1MethodChart', metrics.r1Methods, null, { showPercent: false });
-    } else {
-      document.getElementById('r1MethodChart').innerHTML = '<div class="no-data">No R1 method data</div>';
-    }
-    // R2 method chart
-    const r2Card = document.getElementById('r2MethodCard');
-    if (metrics.r2Methods.length) {
-      if (r2Card) r2Card.style.display = '';
-      renderBarChart('r2MethodChart', metrics.r2Methods, null, { showPercent: false });
-    } else if (r2Card) {
-      r2Card.style.display = 'none';
-    }
-  } else if (metrics.hasFabricVideo) {
-    if (methodRow) methodRow.style.display = 'none';
-    if (legacyRow) legacyRow.style.display = '';
-  } else {
-    if (methodRow) methodRow.style.display = 'none';
-    if (legacyRow) legacyRow.style.display = 'none';
+  // R1 section
+  const r1Sec = document.getElementById('r1Section');
+  const r1HasData = c.r1Invited > 0 || c.r1Completed > 0 || c.r1Passed > 0 || metrics.r1MethodStats.length > 0 || metrics.primaryR1.tracked > 0;
+  if (r1Sec) r1Sec.style.display = r1HasData ? '' : 'none';
+  if (r1HasData) {
+    document.getElementById('r1HeaderMeta').textContent = `${formatNum(metrics.primaryR1.tracked || c.r1Invited)} tracked · ${pct(metrics.primaryR1.passed, metrics.primaryR1.tracked)} pass rate`;
+    document.getElementById('r1Kpis').innerHTML = [
+      renderKpi('Invited', formatNum(c.r1Invited), 'Sent to R1', 'var(--accent3)'),
+      renderKpi('Completed', formatNum(c.r1Completed), pct(c.r1Completed, c.r1Invited) + ' attendance', 'var(--accent)'),
+      renderKpi('Passed', formatNum(c.r1Passed), pct(c.r1Passed, metrics.primaryR1.tracked) + ' pass rate', 'var(--success)'),
+      renderKpi('Rejected', formatNum(c.r1Rejected || 0), pct(c.r1Rejected || 0, metrics.primaryR1.tracked) + ' of tracked', 'var(--danger)'),
+      renderKpi('Methods', formatNum(metrics.r1MethodStats.length), 'Distinct methods used', 'var(--accent4)'),
+    ].join('');
+    const grid = document.getElementById('r1MethodsGrid');
+    const totalR1 = metrics.r1MethodStats.reduce((s, x) => s + x.total, 0) || 1;
+    grid.innerHTML = metrics.r1MethodStats.length
+      ? metrics.r1MethodStats.map(s => renderMethodCard(s, totalR1)).join('')
+      : '<div class="no-data" style="grid-column:1/-1;">No R1 method data — populate the R1_Method column to break down by method.</div>';
   }
 
-  // Replace integrity-flag KPI when no cheating column exists
-  if (!metrics.hasCheating) {
-    const kpis = document.getElementById('assessmentKpis');
-    if (kpis) {
-      const primary = metrics.primaryR1;
-      kpis.innerHTML = [
-        renderKpi('Detected Layers', formatNum(metrics.roundMetrics.length), 'Available evaluation layers', 'var(--accent3)'),
-        renderKpi('Primary R1 Layer', primary.label.replace('R1 - ',''), `${formatNum(primary.tracked)} tracked`, 'var(--accent2)'),
-        renderKpi('R1 Passed', formatNum(primary.passed), `${pct(primary.passed, primary.tracked)} pass rate`, 'var(--accent)'),
-        renderKpi('R2 Selected', formatNum(c.r2Selected), `${pct(c.r2Selected, metrics.r2Total)} of R2`, 'var(--accent4)'),
-      ].join('');
+  // R2 section
+  const r2Sec = document.getElementById('r2Section');
+  const r2HasData = c.r2Invited > 0 || c.r2Selected > 0 || c.r2Rejected > 0 || metrics.r2MethodStats.length > 0 || metrics.r2Total > 0;
+  if (r2Sec) r2Sec.style.display = r2HasData ? '' : 'none';
+  if (r2HasData) {
+    document.getElementById('r2HeaderMeta').textContent = `${formatNum(metrics.r2Total || c.r2Invited)} tracked · ${pct(c.r2Selected, metrics.r2Total)} selection rate`;
+    document.getElementById('r2Kpis').innerHTML = [
+      renderKpi('Invited', formatNum(c.r2Invited), 'Sent to R2', 'var(--accent3)'),
+      renderKpi('Selected', formatNum(c.r2Selected), pct(c.r2Selected, metrics.r2Total) + ' selection', 'var(--success)'),
+      renderKpi('Rejected', formatNum(c.r2Rejected), pct(c.r2Rejected, metrics.r2Total) + ' of R2', 'var(--danger)'),
+      renderKpi('On Hold', formatNum(c.r2Pending || 0), 'Decision pending', 'var(--accent4)'),
+      renderKpi('Methods', formatNum(metrics.r2MethodStats.length), 'Distinct methods used', 'var(--accent2)'),
+    ].join('');
+    const grid = document.getElementById('r2MethodsGrid');
+    const totalR2 = metrics.r2MethodStats.reduce((s, x) => s + x.total, 0) || 1;
+    grid.innerHTML = metrics.r2MethodStats.length
+      ? metrics.r2MethodStats.map(s => renderMethodCard(s, totalR2)).join('')
+      : '<div class="no-data" style="grid-column:1/-1;">No R2 method data — populate the R2_Method column to break down by method.</div>';
+  }
+
+  // Legacy fallback panels — only when the sheet actually has those columns
+  const legacy = document.getElementById('legacyAssessRow');
+  if (legacy) legacy.style.display = metrics.hasFabricVideo ? '' : 'none';
+
+  // Top KPIs — always strip "R1 - " prefix, drop integrity card when absent
+  const kpis = document.getElementById('assessmentKpis');
+  if (kpis) {
+    const primary = metrics.primaryR1;
+    const primaryShort = shortRoundLabel(primary.label) || 'Mixed';
+    const cards = [
+      renderKpi('Detected Layers', formatNum(metrics.roundMetrics.length), 'Available evaluation layers', 'var(--accent3)'),
+      renderKpi('Primary R1 Method', primaryShort, `${formatNum(primary.tracked)} tracked`, 'var(--accent2)'),
+      renderKpi('R1 Passed', formatNum(primary.passed), `${pct(primary.passed, primary.tracked)} pass rate`, 'var(--accent)'),
+    ];
+    if (metrics.hasCheating) {
+      cards.push(renderKpi('Integrity Flags', formatNum(c.cheating), `${pct(c.cheating, c.cheatingTracked)} of tracked`, 'var(--danger)'));
+    } else {
+      cards.push(renderKpi('R2 Selected', formatNum(c.r2Selected), `${pct(c.r2Selected, metrics.r2Total)} of R2`, 'var(--accent4)'));
     }
+    kpis.innerHTML = cards.join('');
+  }
+
+  // Strip "R1 - " from the Round Outcome Mix labels and re-render
+  const rounds = metrics.roundMetrics;
+  if (rounds.length) {
+    const rom = document.getElementById('roundOutcomeMix');
+    if (rom) renderBarChart('roundOutcomeMix', rounds.map(r => ({ label: shortRoundLabel(r.label), count: r.passed })), Math.max(...rounds.map(r => r.tracked), 1), { showPercent: false });
   }
 };
 
@@ -2808,7 +2913,7 @@ renderDashboard = function(metrics, fileName, sourceTotal) {
   const conv = [];
   if (c.total > 0) conv.push(['Shortlist Rate', pct(c.shortlisted, c.total), 'Of total pipeline', 'var(--accent)']);
   if (metrics.primaryR1.invited > 0) conv.push(['R1 Attendance', pct(metrics.primaryR1.completed, metrics.primaryR1.invited), metrics.primaryR1.label, 'var(--accent3)']);
-  if (metrics.primaryR1.tracked > 0) conv.push(['R1 Pass Rate', pct(metrics.primaryR1.passed, metrics.primaryR1.tracked), 'First evaluation layer', 'var(--accent2)']);
+  if (metrics.primaryR1.tracked > 0) conv.push(['R1 Pass Rate', pct(metrics.primaryR1.passed, metrics.primaryR1.tracked), 'R1 outcomes', 'var(--accent2)']);
   if (metrics.r2Total > 0) conv.push(['R2 Selection', pct(c.r2Selected, metrics.r2Total), 'Of R2 results', 'var(--accent4)']);
   if (c.offersShared > 0) conv.push(['Offer Accept', pct(c.offerAccepted, c.offersShared), 'Offered to Accepted', 'var(--success)']);
   if (c.offerAccepted > 0) conv.push(['Joined Rate', pct(c.joined, c.offerAccepted), 'Accepted to Joined', '#00d4ff']);
