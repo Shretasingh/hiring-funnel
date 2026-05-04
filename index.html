@@ -1,0 +1,2616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hiring Funnel Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --surface2: #eef3f8;
+    --border: #d9e2ee;
+    --accent: #0b8f6b;
+    --accent2: #d95f2b;
+    --accent3: #5b5fd6;
+    --accent4: #c69214;
+    --text: #172033;
+    --muted: #67758a;
+    --danger: #d83f5b;
+    --success: #0b8f6b;
+    --shadow: 0 18px 42px rgba(33, 45, 70, 0.10);
+    --shadow-soft: 0 8px 22px rgba(33, 45, 70, 0.07);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(11,143,107,0.12), transparent 34vw),
+      linear-gradient(180deg, #ffffff 0%, var(--bg) 36%);
+    color: var(--text);
+    font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(91,95,214,0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91,95,214,0.055) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1440px; margin: 0 auto; padding: 28px 32px 0; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    padding: 28px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    margin-bottom: 22px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(238,243,248,0.84));
+    box-shadow: var(--shadow);
+  }
+  .header-inner { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .header-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .header-tag::before { content: ''; width: 20px; height: 1px; background: var(--accent); }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(34px, 5vw, 64px);
+    font-weight: 700;
+    line-height: 0.98;
+    letter-spacing: 0;
+  }
+  h1 span { color: var(--accent); }
+  .header-meta {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 7px;
+    font-size: 13px; color: var(--muted);
+  }
+  .status-pill {
+    background: rgba(11,143,107,0.10);
+    border: 1px solid rgba(11,143,107,0.24);
+    color: var(--accent);
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  /* NAV TABS */
+  .tabs {
+    display: flex; gap: 8px;
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 6px;
+    overflow-x: auto;
+    background: rgba(255,255,255,0.78);
+    box-shadow: var(--shadow-soft);
+    position: sticky;
+    top: 8px;
+    z-index: 5;
+  }
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted);
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    padding: 10px 18px;
+    border-radius: 9px;
+    border-bottom: 0;
+    margin-bottom: 0;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: #fff; background: var(--accent); box-shadow: 0 8px 18px rgba(11,143,107,0.18); }
+
+  /* PANELS */
+  .panel { display: none; animation: fadeIn 0.3s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* KPI ROW */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 40px; }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-soft);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); border-color: rgba(11,143,107,0.28); box-shadow: var(--shadow); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--kpi-color, var(--accent));
+  }
+  .kpi-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .kpi-value { font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; color: var(--text); line-height: 1; letter-spacing: 0; }
+  .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 7px; }
+  .kpi-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-top: 6px; }
+
+  /* SECTION TITLES */
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+  @media(max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow-soft);
+  }
+  .card-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  /* FUNNEL */
+  .funnel-wrap { padding: 8px 0; }
+  .funnel-step {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 10px;
+    animation: slideIn 0.4s ease both;
+  }
+  @keyframes slideIn { from { opacity:0; transform: translateX(-12px); } to { opacity:1; transform: translateX(0); } }
+  .funnel-step-label {
+    width: 140px; flex-shrink: 0;
+    font-size: 11px; color: var(--muted);
+    text-align: right;
+    letter-spacing: 0.06em;
+  }
+  .funnel-bar-wrap { flex: 1; position: relative; height: 32px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .funnel-bar {
+    height: 100%;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #000;
+    transition: width 1s cubic-bezier(0.16,1,0.3,1);
+    position: relative;
+    min-width: 40px;
+  }
+  .funnel-count {
+    width: 64px; flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: right;
+  }
+  .funnel-pct {
+    width: 48px; flex-shrink: 0;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+  }
+  .funnel-connector {
+    width: 2px;
+    height: 8px;
+    background: var(--border);
+    margin-left: 156px;
+    margin-bottom: 2px;
+  }
+
+  /* BAR CHARTS */
+  .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: flex; align-items: center; gap: 12px; }
+  .bar-row-label { width: 180px; flex-shrink: 0; font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { flex: 1; height: 24px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 500; }
+  .bar-num { font-size: 12px; color: var(--text); min-width: 36px; text-align: right; }
+
+  /* DONUT CHART */
+  .donut-wrap { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .donut-svg { flex-shrink: 0; }
+  .donut-legend { display: flex; flex-direction: column; gap: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-val { color: var(--muted); margin-left: auto; padding-left: 16px; }
+
+  /* STEPS TIMELINE */
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .timeline-item { position: relative; margin-bottom: 24px; }
+  .timeline-dot {
+    position: absolute;
+    left: -27px; top: 4px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .timeline-dot.done { border-color: var(--accent); background: rgba(0,229,160,0.15); }
+  .timeline-dot.active { border-color: var(--accent2); background: rgba(255,107,53,0.15); }
+  .timeline-dot::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .timeline-dot.done::after { color: var(--accent); }
+  .timeline-dot.active::after { color: var(--accent2); }
+  .timeline-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .timeline-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .timeline-stat { display: inline-block; margin-top: 8px; background: var(--surface2); border-radius: 6px; padding: 4px 10px; font-size: 11px; color: var(--accent); }
+
+  /* ROLE INFO */
+  .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .role-item {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 16px;
+    border-left: 3px solid var(--accent3);
+  }
+  .role-item-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .role-item-val { font-size: 14px; font-weight: 500; line-height: 1.5; }
+
+  /* STAT TABLE */
+  .stat-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .stat-table th { color: var(--muted); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .stat-table td { padding: 10px 12px; border-bottom: 1px solid rgba(35,40,52,0.5); }
+  .stat-table tr:hover td { background: var(--surface2); }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px;
+    font-weight: 600; letter-spacing: 0.06em;
+  }
+  .badge-green { background: rgba(0,229,160,0.12); color: var(--accent); }
+  .badge-red { background: rgba(255,77,106,0.12); color: var(--danger); }
+  .badge-orange { background: rgba(255,107,53,0.15); color: var(--accent2); }
+  .badge-purple { background: rgba(124,106,247,0.15); color: var(--accent3); }
+  .badge-yellow { background: rgba(247,201,72,0.15); color: var(--accent4); }
+
+  /* CONVERSION RATES */
+  .conv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+  .conv-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-soft);
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .conv-rate { font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; }
+  .conv-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .conv-from { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  /* Source pills */
+  .pill-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 4px 14px;
+    font-size: 11px;
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.2s;
+  }
+  .pill:hover { border-color: rgba(0,229,160,0.4); }
+  .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* Tooltip */
+  .tip { position: relative; cursor: help; }
+  .tip:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: #1e2330; border: 1px solid var(--border);
+    color: var(--text); font-size: 11px; padding: 6px 10px;
+    border-radius: 6px; white-space: nowrap; z-index: 10;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  footer {
+    margin-top: 60px; padding: 24px 0;
+    border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+    display: flex; justify-content: space-between;
+  }
+
+
+  /* ANALYTICS */
+  .analytics-grid { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 16px; margin-bottom: 34px; }
+  .insight-card {
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: var(--shadow-soft);
+  }
+  .insight-kicker { font-family: 'JetBrains Mono', monospace; color: var(--muted); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+  .insight-value { font-family: 'Space Grotesk', sans-serif; font-size: 28px; line-height: 1.05; font-weight: 700; color: var(--text); }
+  .insight-text { color: var(--muted); font-size: 12px; line-height: 1.55; margin-top: 8px; }
+  .analytics-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr); gap: 24px; margin-bottom: 34px; }
+  .mini-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .mini-table th { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--border); }
+  .mini-table td { padding: 10px 8px; border-bottom: 1px solid rgba(217,226,238,0.82); vertical-align: middle; }
+  .mini-table tr:last-child td { border-bottom: 0; }
+  .table-strong { font-weight: 800; color: var(--text); }
+  .candidate-table-wrap { overflow-x: auto; }
+  .candidate-name { font-weight: 800; color: var(--text); }
+  .candidate-meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .stage-chip { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 8px; background: rgba(91,95,214,0.10); color: var(--accent3); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; }
+  @media(max-width: 1000px) { .analytics-grid { grid-template-columns: repeat(2, minmax(180px, 1fr)); } .analytics-layout { grid-template-columns: 1fr; } }
+
+
+  /* WORKSPACE ORGANIZATION */
+  .workspace-titlebar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .workspace-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    line-height: 1.05;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .workspace-subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 6px;
+    line-height: 1.45;
+  }
+  .view-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: rgba(91,95,214,0.10);
+    color: var(--accent3);
+    border: 1px solid rgba(91,95,214,0.18);
+    padding: 7px 11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .ops-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .ops-item {
+    background: rgba(255,255,255,0.86);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 14px;
+    box-shadow: var(--shadow-soft);
+  }
+  .ops-label { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .ops-value { font-family: 'Space Grotesk', sans-serif; font-size: 23px; font-weight: 700; margin-top: 4px; color: var(--text); }
+  .ai-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 18px;
+    align-items: start;
+  }
+  .ai-brief {
+    display: grid;
+    gap: 12px;
+  }
+  .ai-note {
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, #fff, #f8fafc);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow-soft);
+  }
+  .ai-note-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px; margin-bottom: 6px; color: var(--text); }
+  .ai-note-body { color: var(--muted); font-size: 13px; line-height: 1.58; }
+  .ai-action-list { display: grid; gap: 10px; }
+  .ai-action { display: flex; gap: 10px; align-items: flex-start; color: var(--text); font-size: 13px; line-height: 1.45; }
+  .ai-action::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex: 0 0 auto; }
+  .candidate-panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  @media(max-width: 1000px) { .ops-strip { grid-template-columns: repeat(2, minmax(150px, 1fr)); } .ai-panel { grid-template-columns: 1fr; } }
+  @media(max-width: 700px) { .workspace-titlebar { flex-direction: column; } .ops-strip { grid-template-columns: 1fr; } }
+
+
+  /* JOB SIDEBAR */
+  .dashboard-layout {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+  .job-sidebar {
+    position: sticky;
+    top: 18px;
+    background: rgba(255,255,255,0.90);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow-soft);
+    padding: 16px;
+    max-height: calc(100vh - 112px);
+    overflow: auto;
+  }
+  .job-sidebar-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .job-sidebar-sub {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+    margin-bottom: 14px;
+  }
+  .job-list { display: flex; flex-direction: column; gap: 8px; }
+  .job-btn {
+    width: 100%;
+    text-align: left;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 11px 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .job-btn:hover { border-color: rgba(11,143,107,0.35); transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+  .job-btn.active { background: rgba(11,143,107,0.10); border-color: rgba(11,143,107,0.42); }
+  .job-name { font-weight: 800; font-size: 13px; line-height: 1.25; }
+  .job-meta { color: var(--muted); font-size: 11px; margin-top: 5px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .job-dot { width: 7px; height: 7px; border-radius: 999px; background: var(--accent); display: inline-block; margin-right: 6px; }
+  .job-empty { color: var(--muted); font-size: 12px; line-height: 1.5; padding: 10px 2px; }
+  .dashboard-main { min-width: 0; }
+
+
+  /* POLISH LAYER */
+  .empty-actions { display: grid; grid-template-columns: repeat(3, minmax(160px, 1fr)); gap: 12px; margin-top: 24px; text-align: left; }
+  .empty-step { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .empty-step strong { display: block; color: var(--text); font-size: 13px; margin-bottom: 4px; }
+  .empty-step span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+  .job-tools { display: grid; gap: 10px; margin-bottom: 12px; }
+  .job-search { width: 100%; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 10px; padding: 10px 11px; font-family: 'Manrope', system-ui, sans-serif; font-size: 13px; outline: none; }
+  .job-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,143,107,0.10); }
+  .readiness-card { display: grid; gap: 14px; }
+  .score-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .score-value { font-family: 'Space Grotesk', sans-serif; font-size: 42px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .score-caption { color: var(--muted); font-size: 12px; line-height: 1.45; }
+  .quality-list { display: grid; gap: 9px; }
+  .quality-row { display: grid; grid-template-columns: 120px 1fr 48px; gap: 10px; align-items: center; font-size: 12px; color: var(--muted); }
+  .quality-track { height: 8px; border-radius: 999px; background: var(--surface2); overflow: hidden; }
+  .quality-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), #51b89a); }
+  .role-compare-wrap { overflow-x: auto; }
+  .schema-pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .schema-pill { border: 1px solid var(--border); background: var(--surface2); color: var(--muted); border-radius: 999px; padding: 5px 9px; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .schema-pill.ok { background: rgba(11,143,107,0.10); color: var(--accent); border-color: rgba(11,143,107,0.22); }
+  .schema-pill.warn { background: rgba(217,95,43,0.10); color: var(--accent2); border-color: rgba(217,95,43,0.22); }
+
+  /* RECORDS */
+  .records-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .records-count { color: var(--muted); font-size: 12px; }
+  .records-table-wrap { overflow: auto; max-height: 680px; border: 1px solid var(--border); border-radius: 12px; }
+  .records-table { width: 100%; min-width: 1180px; border-collapse: collapse; font-size: 12px; background: var(--surface); }
+  .records-table th { position: sticky; top: 0; z-index: 2; background: #f8fafc; color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--border); }
+  .records-table td { padding: 10px; border-bottom: 1px solid rgba(217,226,238,0.82); vertical-align: top; color: var(--text); }
+  .records-table tr:hover td { background: #fbfcfe; }
+  .records-muted { color: var(--muted); font-size: 11px; }
+  .records-name { font-weight: 800; color: var(--text); }
+  .records-email { color: var(--muted); font-size: 11px; margin-top: 2px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  @media(max-width: 700px) { .empty-actions { grid-template-columns: 1fr; } .quality-row { grid-template-columns: 95px 1fr 42px; } }
+
+
+  /* DATA LOADER */
+  .upload-card {
+    background: rgba(255,255,255,0.88);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    min-width: 300px;
+    max-width: 460px;
+    box-shadow: var(--shadow-soft);
+  }
+  .upload-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+  .file-input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; pointer-events: none; }
+  .upload-btn {
+    border: 1px solid rgba(11,143,107,0.30);
+    background: rgba(11,143,107,0.10);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .upload-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .dataset-status { font-size: 11px; color: var(--muted); text-align: right; line-height: 1.5; }
+  .dataset-status strong { color: var(--text); font-weight: 500; }
+  .dataset-error {
+    display: none;
+    margin-top: 10px;
+    color: var(--danger);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .dataset-error.active { display: block; }
+  .empty-state {
+    background: var(--surface);
+    border: 1px dashed rgba(11,143,107,0.34);
+    border-radius: 14px;
+    box-shadow: var(--shadow-soft);
+    padding: 36px;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+  .empty-title { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 10px; }
+  .empty-sub { color: var(--muted); font-size: 13px; line-height: 1.7; max-width: 720px; margin: 0 auto; }
+  .filter-panel {
+    display: grid;
+    grid-template-columns: minmax(170px, 1fr) minmax(150px, 0.85fr) minmax(150px, 0.85fr) minmax(170px, 1fr) minmax(150px, 0.85fr) auto;
+    gap: 12px;
+    align-items: end;
+    background: rgba(255,255,255,0.86);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow-soft);
+  }
+  .filter-field { display: flex; flex-direction: column; gap: 6px; }
+  .filter-field label { color: var(--muted); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .filter-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 9px;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .filter-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,143,107,0.12); }
+  .filter-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .clear-btn {
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    border-radius: 9px;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .filter-summary { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .dashboard-shell.is-empty .tabs,
+  .dashboard-shell.is-empty .panel,
+  .dashboard-shell.is-empty .filter-panel,
+  .dashboard-shell.is-empty .dashboard-layout,
+  .dashboard-shell.is-empty footer { display: none; }
+  .dashboard-shell:not(.is-empty) .empty-state { display: none; }
+  .metric-large { font-family:'Space Grotesk',sans-serif; font-size:48px; font-weight:800; margin: 8px 0; }
+  .muted-line { color:var(--muted); font-size:12px; line-height:1.6; }
+  .no-data { color: var(--muted); font-size: 12px; padding: 8px 0; }
+  .bar-fill.empty { justify-content: center; color: var(--muted); background: var(--surface2) !important; }
+  @media(max-width: 1000px) {
+    .dashboard-layout { grid-template-columns: 1fr; }
+    .job-sidebar { position: static; max-height: none; }
+    .job-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+  }
+  @media(max-width: 700px) {
+    .container { padding: 0 18px; }
+    .header-inner, .upload-row { align-items: flex-start; }
+    .header-meta, .dataset-status { align-items: flex-start; text-align: left; }
+    .upload-card { width: 100%; max-width: none; }
+    .filter-panel { grid-template-columns: 1fr; }
+    .bar-row { align-items: flex-start; flex-direction: column; gap: 6px; }
+    .bar-row-label { width: 100%; white-space: normal; }
+    .bar-track { width: 100%; flex: none; }
+    .bar-num { min-width: 0; text-align: left; }
+    .funnel-step { align-items: stretch; flex-direction: column; gap: 6px; }
+    .funnel-step-label, .funnel-count, .funnel-pct { width: auto; text-align: left; }
+    .funnel-connector { margin-left: 12px; }
+    .analytics-grid { grid-template-columns: 1fr; }
+    .analytics-layout { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 8px; }
+  }
+
+
+  /* ======================== CONNECT CARD ======================== */
+  .connect-card {
+    background: rgba(255,255,255,0.88);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    min-width: 300px;
+    max-width: 500px;
+    box-shadow: var(--shadow-soft);
+  }
+  .connect-tabs-row {
+    display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .ctab {
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    border-radius: 7px;
+    padding: 5px 11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .ctab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ctab-action {
+    margin-left: auto;
+    border: 1px solid rgba(91,95,214,0.3);
+    background: rgba(91,95,214,0.08);
+    color: var(--accent3);
+    border-radius: 7px;
+    padding: 5px 11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .ctab-action:hover { background: rgba(91,95,214,0.14); }
+  .connect-panel { transition: opacity 0.2s; }
+  .connect-panel.hidden { display: none; }
+  .sheet-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .sheet-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    outline: none;
+  }
+  .sheet-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,143,107,0.10); }
+  .connect-btn {
+    border: 1px solid rgba(11,143,107,0.35);
+    background: rgba(11,143,107,0.10);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s;
+  }
+  .connect-btn:hover { background: rgba(11,143,107,0.18); }
+  .connect-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .refresh-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .refresh-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .refresh-select {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 7px;
+    padding: 4px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    outline: none;
+  }
+  .refresh-status { font-size: 10px; color: var(--muted); }
+
+  /* ======================== MODAL ======================== */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(23,32,51,0.55);
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    backdrop-filter: blur(2px);
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    width: 100%; max-width: 640px;
+    max-height: 85vh;
+    display: flex; flex-direction: column;
+    box-shadow: var(--shadow);
+  }
+  .modal-header {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .modal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 700; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .modal-sub { color: var(--muted); font-size: 12px; line-height: 1.5; max-width: 480px; }
+  .modal-close {
+    position: absolute; top: 20px; right: 20px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; cursor: pointer; line-height: 1;
+  }
+  .modal-body { padding: 16px 24px; overflow-y: auto; flex: 1; }
+  .modal-field-row {
+    display: grid;
+    grid-template-columns: 1fr 90px 1fr;
+    gap: 10px; align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(217,226,238,0.6);
+  }
+  .modal-field-row:last-child { border-bottom: 0; }
+  .mfr-label { font-size: 12px; font-weight: 600; color: var(--text); }
+  .mfr-hint { font-size: 10px; color: var(--muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+  .mfr-type { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent3); text-align: center; }
+  .mfr-input {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    outline: none;
+    width: 100%;
+  }
+  .mfr-input:focus { border-color: var(--accent3); box-shadow: 0 0 0 3px rgba(91,95,214,0.10); }
+  .mfr-input::placeholder { color: var(--muted); opacity: 0.7; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; gap: 12px;
+  }
+  .modal-btn-reset {
+    border: 1px solid var(--border); background: var(--surface2); color: var(--muted);
+    border-radius: 9px; padding: 9px 18px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer;
+  }
+  .modal-btn-save {
+    border: 1px solid rgba(11,143,107,0.35); background: var(--accent); color: #fff;
+    border-radius: 9px; padding: 9px 22px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer;
+    font-weight: 700;
+  }
+  .modal-saved-badge {
+    background: rgba(11,143,107,0.12); color: var(--accent);
+    border: 1px solid rgba(11,143,107,0.25);
+    border-radius: 6px; padding: 4px 10px;
+    font-size: 10px; font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    display: none;
+  }
+  .modal-saved-badge.show { display: inline-block; }
+
+  /* ======================== ROLE SELECTOR ======================== */
+  .workspace-right {
+    display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .role-selector-wrap {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .role-selector-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+  }
+  .role-select {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 9px;
+    padding: 8px 12px;
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-size: 13px; font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    min-width: 180px;
+  }
+  .role-select:focus { border-color: var(--accent); }
+  .role-badge {
+    display: inline-block;
+    border-radius: 6px;
+    padding: 3px 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    background: rgba(91,95,214,0.10); color: var(--accent3);
+    margin-left: 10px;
+  }
+
+  /* ======================== FREELANCER KPI PANEL ======================== */
+  .ops-kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 32px; }
+
+  /* Tab hidden by role */
+  .tab-btn.role-hidden { display: none; }
+
+
+  /* ── INSIGHTS TAB ── */
+  .insights-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px; }
+  .exp-pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .exp-pill { background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; font-size: 11px; display: flex; align-items: center; gap: 8px; }
+  .exp-pill-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; }
+  .dynamic-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .no-section { display: none !important; }
+
+</style>
+</head>
+
+<body>
+<div class="container dashboard-shell is-empty" id="dashboardShell">
+
+  <header>
+    <div class="header-inner">
+      <div>
+        <div class="header-tag">Universal Hiring Intelligence</div>
+        <h1>Hiring<br><span>Funnel</span></h1>
+      </div>
+      <div class="header-meta">
+        <div class="status-pill" id="statusPill">AWAITING DATA</div>
+        <div id="headerTotal">Connect your sheet or upload CSVs</div>
+        <div id="headerPeriod">Works for any role type · auto-adapts to your columns</div>
+        <div class="connect-card">
+          <div class="connect-tabs-row">
+            <button class="ctab active" data-ctab="sheet" onclick="switchConnectTab('sheet',this)">Google Sheet / URL</button>
+            <button class="ctab" data-ctab="csv" onclick="switchConnectTab('csv',this)">CSV Upload</button>
+            <button class="ctab-action" id="colMapBtn">Column Map</button>
+          </div>
+          <div class="connect-panel" id="cpanel-sheet">
+            <div class="sheet-input-row">
+              <input class="sheet-input" id="sheetUrl" type="url" placeholder="Paste Google Sheets or CSV URL..." autocomplete="off" spellcheck="false">
+              <button class="connect-btn" id="connectBtn">Connect</button>
+            </div>
+            <div class="refresh-row">
+              <span class="refresh-label">Auto-refresh:</span>
+              <select class="refresh-select" id="refreshInterval">
+                <option value="0">Off</option>
+                <option value="60">1 min</option>
+                <option value="300">5 min</option>
+                <option value="600">10 min</option>
+                <option value="1800">30 min</option>
+              </select>
+              <span class="refresh-status" id="refreshStatus"></span>
+            </div>
+          </div>
+          <div class="connect-panel hidden" id="cpanel-csv">
+            <div class="upload-row">
+              <label class="upload-btn" for="csvInput">Upload CSVs</label>
+              <input class="file-input" id="csvInput" type="file" accept=".csv,text/csv" multiple>
+              <div class="dataset-status" id="datasetStatus">No files loaded · multi-select supported</div>
+            </div>
+          </div>
+          <div class="dataset-error" id="datasetError"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Column Mapping Modal -->
+  <div class="modal-overlay hidden" id="colMapOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Column Mapping</div>
+        <div class="modal-sub">Map your actual column headers to the standard field names. Leave blank to use defaults. Saved to browser storage.</div>
+        <button class="modal-close" id="colMapClose">×</button>
+      </div>
+      <div class="modal-body" id="colMapBody"></div>
+      <div class="modal-footer">
+        <button class="modal-btn-reset" id="colMapReset">Reset All</button>
+        <span class="modal-saved-badge" id="colMapSavedBadge">Saved!</span>
+        <button class="modal-btn-save" id="colMapSave">Save Mappings</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-state">
+    <div class="empty-title">Connect your hiring data to view the dashboard</div>
+    <div class="empty-sub">Paste a public Google Sheets URL or any direct CSV URL for real-time auto-refresh, or upload CSV files. Works with any hiring data — full-time, contract, freelance, campus or lateral — and auto-adapts to the columns present.</div>
+    <div class="empty-actions">
+      <div class="empty-step"><strong>1. Connect or Upload</strong><span>Paste a Google Sheets URL for live updates, or upload one or many CSVs.</span></div>
+      <div class="empty-step"><strong>2. Map Columns (optional)</strong><span>If your headers differ from standard names, click Column Map to set aliases.</span></div>
+      <div class="empty-step"><strong>3. Pick your role</strong><span>Select a role view to see KPIs and tabs tailored to your stage of the funnel.</span></div>
+    </div>
+  </div>
+
+  <div class="dashboard-layout">
+    <aside class="job-sidebar" aria-label="Hiring roles">
+      <div class="job-sidebar-title">Hiring Jobs</div>
+      <div class="job-sidebar-sub">Select a role for its dedicated funnel view.</div>
+      <div class="job-tools"><input class="job-search" id="jobSearch" type="search" placeholder="Search jobs" autocomplete="off"></div>
+      <div class="job-list" id="jobList"><div class="job-empty">Connect data to see roles here.</div></div>
+    </aside>
+    <main class="dashboard-main">
+
+  <div class="workspace-titlebar">
+    <div>
+      <div class="workspace-title" id="workspaceTitle">All Hiring Roles</div>
+      <div class="workspace-subtitle" id="workspaceSubtitle">Combined supply command center across uploaded job openings.</div>
+    </div>
+    <div class="workspace-right">
+      <div class="view-chip" id="workspaceChip">All roles</div>
+      <div class="role-selector-wrap">
+        <span class="role-selector-label">View as</span>
+        <select class="role-select" id="roleSelect">
+          <option value="all">All Roles (Admin)</option>
+          <option value="sourcer">Sourcer</option>
+          <option value="recruiter">Recruiter</option>
+          <option value="assessment">Assessment Team</option>
+          <option value="hiring_manager">Hiring Manager</option>
+          <option value="hr">HR / Finance</option>
+          <option value="freelancer_ops">Freelancer / Ops</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="ops-strip" id="opsStrip"></div>
+
+  <div class="filter-panel" aria-label="Candidate filters">
+    <div class="filter-field">
+      <label for="nameFilter">Candidate name</label>
+      <input class="filter-input" id="nameFilter" type="search" placeholder="Search full name" autocomplete="off">
+    </div>
+    <div class="filter-field">
+      <label for="soulFilter">Soul ID</label>
+      <input class="filter-input" id="soulFilter" type="search" placeholder="Search Soul ID" autocomplete="off">
+    </div>
+    <div class="filter-field">
+      <label for="phoneFilter">Phone number</label>
+      <input class="filter-input" id="phoneFilter" type="search" placeholder="Search phone" autocomplete="off">
+    </div>
+    <div class="filter-field">
+      <label for="emailFilter">Email</label>
+      <input class="filter-input" id="emailFilter" type="search" placeholder="Search email" autocomplete="off">
+    </div>
+    <div class="filter-field">
+      <label for="roleFilter">Role</label>
+      <input class="filter-input" id="roleFilter" type="search" placeholder="Search role/file" autocomplete="off">
+    </div>
+    <div class="filter-actions">
+      <button class="clear-btn" id="clearFilters" type="button">Clear filters</button>
+      <div class="filter-summary" id="filterSummary">Showing all candidates</div>
+    </div>
+  </div>
+
+  <nav class="tabs" id="mainTabs">
+    <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview', this)">Executive</button>
+    <button class="tab-btn" data-tab="funnel" onclick="switchTab('funnel', this)">Funnel</button>
+    <button class="tab-btn" data-tab="assessments" onclick="switchTab('assessments', this)">Rounds</button>
+    <button class="tab-btn" data-tab="sources" onclick="switchTab('sources', this)">Sources</button>
+    <button class="tab-btn" data-tab="candidates" onclick="switchTab('candidates', this)">Candidates</button>
+    <button class="tab-btn" data-tab="records" onclick="switchTab('records', this)">Records</button>
+    <button class="tab-btn" data-tab="role" onclick="switchTab('role', this)">Roles</button>
+    <button class="tab-btn" data-tab="ai" onclick="switchTab('ai', this)">AI Brief</button>
+    <button class="tab-btn" data-tab="insights" onclick="switchTab('insights', this)">Profile</button>
+  </nav>
+
+  <div class="panel active" id="panel-overview">
+    <div class="kpi-row" id="overviewKpis"></div>
+    <div class="analytics-grid" id="analyticsGrid"></div>
+    <div class="section-title">Conversion Overview</div>
+    <div class="conv-grid" id="conversionGrid" style="margin-bottom: 32px;"></div>
+    <div class="analytics-layout">
+      <div class="card"><div class="card-title">Source Efficiency</div><div id="sourceEfficiency"></div></div>
+      <div class="card"><div class="card-title">Data Readiness</div><div id="dataReadiness"></div></div>
+      <div class="card"><div class="card-title">AI Summary Preview</div><div id="aiSummaryPreview"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Supply Sources Breakdown</div><div class="bar-chart" id="sourceBreakdown"></div></div>
+      <div class="card"><div class="card-title">Shift / Availability Distribution</div><div id="shiftDistribution"></div></div>
+    </div>
+    <div class="section-title">Relocation & Key Stats</div>
+    <div class="grid-3" id="keyStats"></div>
+    <div class="section-title role-section-fl" id="flSection" style="display:none;">Freelancer / Contract Stats</div>
+    <div class="ops-kpi-row" id="flKpis" style="display:none;"></div>
+  </div>
+
+  <div class="panel" id="panel-funnel">
+    <div class="section-title">Full Supply Funnel</div>
+    <div class="card" style="margin-bottom: 32px;"><div class="card-title">Candidate movement at each stage</div><div class="funnel-wrap" id="funnelWrap"></div></div>
+    <div class="section-title">Stage-by-Stage Drop Analysis</div>
+    <div class="card"><table class="stat-table"><thead><tr><th>Stage</th><th>Count</th><th>% of Pipeline</th><th>Step Drop-off</th><th>Status</th></tr></thead><tbody id="stageTableBody"></tbody></table></div>
+  </div>
+
+  <div class="panel" id="panel-sources">
+    <div class="section-title">Supply Source Analysis</div>
+    <div class="kpi-row" id="sourceKpis"></div>
+    <div class="section-title">Campus Pools Breakdown</div>
+    <div class="card" style="margin-bottom:32px;"><div class="card-title">College-wise candidate count</div><div class="bar-chart" id="campusBreakdown"></div></div>
+    <div class="section-title">Source Quality — Who Actually Joined</div>
+    <div class="card"><div class="card-title">Joining numbers by source</div><div class="bar-chart" id="joinedBySource"></div></div>
+  </div>
+
+  <div class="panel" id="panel-assessments">
+    <div class="section-title">Round & Assessment Performance</div>
+    <div class="kpi-row" id="assessmentKpis" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));"></div>
+    <div class="analytics-layout">
+      <div class="card"><div class="card-title">Unified R1 & Round Layers</div><div id="roundPerformance"></div></div>
+      <div class="card"><div class="card-title">Round Outcome Mix</div><div class="bar-chart" id="roundOutcomeMix"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Assessment/Test Layer</div><div class="bar-chart" id="fabricResults"></div></div>
+      <div class="card"><div class="card-title">Video / Submission Layer</div><div class="muted-line" id="videoSummary" style="margin-bottom:12px;"></div><div class="bar-chart" id="videoResults"></div></div>
+    </div>
+    <div class="section-title">Interview / Later Round Results</div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Round 1 / First Evaluation</div><div id="r1Results"></div></div>
+      <div class="card"><div class="card-title">Round 2 / Final Evaluation</div><div class="bar-chart" id="r2Results"></div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-candidates">
+    <div class="section-title">Candidate Search Across Job Openings</div>
+    <div class="candidate-panel">
+      <div class="card"><div class="card-title">Matching Candidates & Current Stage</div><div id="candidateMatches"></div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-records">
+    <div class="section-title">Records</div>
+    <div class="card">
+      <div class="card-title">Full filtered data for current role/view</div>
+      <div id="recordsTable"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-ai">
+    <div class="section-title">AI Brief</div>
+    <div class="ai-panel">
+      <div class="ai-brief" id="aiBrief"></div>
+      <div class="card">
+        <div class="card-title">AI Integration Note</div>
+        <div class="muted-line">This HTML generates a safe local brief from dashboard metrics. A real AI assistant can be connected through a small secure backend so candidate data is not sent from the browser with an exposed API key.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-role">
+    <div class="section-title">Role Mix</div>
+    <div class="role-grid" id="roleGrid"></div>
+    <div class="section-title">Role Comparison</div>
+    <div class="card" style="margin-bottom:32px;"><div class="card-title">Opening-by-opening performance</div><div id="roleComparison"></div></div>
+    <div class="section-title">Annotation Experience Types</div>
+    <div class="card" style="margin-bottom:32px;"><div class="card-title">Formats candidates reported experience in</div><div class="pill-wrap" id="annotationPills"></div></div>
+    <div class="section-title">Candidate Academic Background</div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Degree Types</div><div class="bar-chart" id="degreeTypes"></div></div>
+      <div class="card"><div class="card-title">Top Departments</div><div class="bar-chart" id="departmentTypes"></div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-steps">
+    <div class="section-title">Supply Process — Step by Step</div>
+    <div class="grid-2">
+      <div class="card"><div class="timeline" id="processTimeline"></div></div>
+      <div>
+        <div class="card" style="margin-bottom:24px;"><div class="card-title">Overall Funnel Health</div><table class="stat-table"><tbody id="funnelHealth"></tbody></table></div>
+        <div class="card"><div class="card-title">Timeline of Additions</div><div class="bar-chart" id="timelineAdditions"></div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="panel" id="panel-insights">
+    <div class="section-title">Candidate Profile Overview</div>
+    <div class="insights-grid">
+      <div class="card" id="skillsCard"><div class="card-title">Top Skills</div><div class="bar-chart" id="skillsChart"></div></div>
+      <div class="card" id="locationCard"><div class="card-title">Location Distribution</div><div class="bar-chart" id="locationChart"></div></div>
+    </div>
+    <div class="insights-grid">
+      <div class="card" id="expCard"><div class="card-title">Experience Distribution</div><div class="bar-chart" id="expChart"></div></div>
+      <div class="card" id="payCard"><div class="card-title">Expected Pay / Rate Range</div><div class="bar-chart" id="payChart"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card" id="empTypeCard"><div class="card-title">Employment Type Preference</div><div id="empTypeChart"></div></div>
+      <div class="card" id="scoreCard"><div class="card-title">Score Distribution</div><div class="bar-chart" id="scoreChart"></div></div>
+    </div>
+    <div class="section-title" id="extraColsTitle" style="display:none;">Role-Specific Fields</div>
+    <div class="insights-grid" id="extraColsGrid" style="display:none;"></div>
+  </div>
+
+    </main>
+  </div>
+
+  <footer>
+    <div id="footerLeft">Supply Intelligence Dashboard</div>
+    <div id="footerRight">Total: 0 candidates · 0 joined</div>
+  </footer>
+
+</div>
+
+
+<script>
+const COLORS = ['var(--accent3)','var(--accent)','var(--accent2)','var(--accent4)','#00d4ff','#ff80ab','#34d399','#fbbf24'];
+const EMPTY_VALUES = new Set(['','na','n/a','-','null','undefined']);
+
+/* ---- Role configuration ---- */
+const ROLE_CONFIG = {
+  all:            { label:'All (Admin)',       tabs:['overview','funnel','assessments','sources','candidates','records','role','ai'], color:'var(--accent3)' },
+  sourcer:        { label:'Sourcer',           tabs:['overview','sources','records'],                                                 color:'var(--accent2)' },
+  recruiter:      { label:'Recruiter',         tabs:['overview','funnel','sources','candidates','records'],                          color:'var(--accent)' },
+  assessment:     { label:'Assessment Team',   tabs:['overview','assessments','records'],                                            color:'var(--accent4)' },
+  hiring_manager: { label:'Hiring Manager',    tabs:['overview','funnel','assessments','role','ai'],                                 color:'#00d4ff' },
+  hr:             { label:'HR / Finance',      tabs:['overview','funnel','candidates','records'],                                    color:'#ff80ab' },
+  freelancer_ops: { label:'Freelancer / Ops',  tabs:['overview','records'],                                                          color:'#34d399' },
+};
+
+/* ---- Must-have fields for column mapping ---- */
+const MUST_HAVE_FIELDS = [
+  { canonical:'Date of Addition',  label:'Date of Addition',      type:'Date',     hint:'Date_of_Addition' },
+  { canonical:'Pool Name',         label:'Source / Channel',      type:'Text',     hint:'Source' },
+  { canonical:'Full Name',         label:'Candidate Name',        type:'Text',     hint:'Name' },
+  { canonical:'Email',             label:'Email',                  type:'Email',    hint:'Email' },
+  { canonical:'Contact Number',    label:'Phone Number',          type:'Number',   hint:'Phone_Number' },
+  { canonical:'Resume',            label:'Resume Link',           type:'Link',     hint:'Resume' },
+  { canonical:'Shortlisted',       label:'Shortlisted',           type:'Yes/No/Maybe', hint:'Shortlisted' },
+  { canonical:'R1 Method',         label:'R1 Method',             type:'Dropdown', hint:'R1_Method' },
+  { canonical:'R1 Status',         label:'R1 Status',             type:'Dropdown', hint:'R1_Status' },
+  { canonical:'R2 Method',         label:'R2 Method',             type:'Dropdown', hint:'R2_Method' },
+  { canonical:'R2 Status',         label:'R2 Status',             type:'Dropdown', hint:'R2_Status' },
+  { canonical:'Final Status',      label:'Final Status',          type:'Dropdown', hint:'Final_Status' },
+  { canonical:'Role',              label:'Role / Position',       type:'Text',     hint:'Role' },
+  { canonical:'Offers Shared',     label:'Offer Letter Status',   type:'Dropdown', hint:'Offer_Letter_Status' },
+  { canonical:'Joined',            label:'Joining Status',        type:'Dropdown', hint:'Joining_Status' },
+  { canonical:'Contract Status',   label:'Contract Status',       type:'Dropdown', hint:'Contract_Status' },
+  { canonical:'NDA Status',        label:'NDA Status',            type:'Dropdown', hint:'NDA_Status' },
+  { canonical:'Payment Status',    label:'Payment Status',        type:'Dropdown', hint:'Payment_Status' },
+];
+
+/* ---- Field aliases (updated for new schema) ---- */
+const FIELD_ALIASES = {
+  'Date of Addition':   ['Date_of_Addition','Date of Addition','Date Added','Added Date','Created Date','Applied Date','Application Date'],
+  'Pool Name':          ['Source','Pool Name','Candidate Source','Channel','Sourcing Channel','Lead Source'],
+  'Role':               ['Role','Role Name','Job Role','Position','Opening','Requirement','Job Title'],
+  'Soul Id':            ['Soul Id','Soul ID','Candidate ID','Candidate Id','Applicant ID','Applicant Id','ID'],
+  'Full Name':          ['Name','Full Name','Candidate Name','Applicant Name'],
+  'Email':              ['Email','Primary Email','Email Address'],
+  'Secondary Email':    ['Secondary_Email','Email 2','Alternate Email'],
+  'Contact Number':     ['Phone_Number','Contact Number','Phone Number','Phone','Mobile','Mobile Number','Contact','Alternate_Phone_Number'],
+  'Location':           ['Location'],
+  'Resume':             ['Resume'],
+  'LinkedIn':           ['LinkedIn','Linkedin','LinkedIn Profile'],
+  'Portfolio':          ['Github or Portfolio','GitHub','Github','Portfolio'],
+  'Years of Experience':['Years_of_Experience','Years of Experience'],
+  'Relevant Experience':['Relevant_Experience','Relevant Experience'],
+  'Current Company':    ['Current_Company','Current Company'],
+  'Current Designation':['Current_Designation','Current Designation','Current Job Title'],
+  'Primary Skills':     ['Primary_Skills','Primary Skills'],
+  'College University': ['College_University','College','University'],
+  'Degree':             ['Degree','Qualification','Education'],
+  'Department':         ['Domain_Specialization','Department','Branch','Specialization','Major'],
+  'Certifications':     ['Certifications'],
+  'Current CTC':        ['Current_Pay_Rate','Current_CTC','Current Pay Rate','Current CTC'],
+  'Expected CTC':       ['Expected_Pay_Rate','Expected_CTC','Expected Pay Rate','Expected CTC'],
+  'Notice Period':      ['Notice_Period','Joining_Availability','Notice Period','Joining Availability','Notice Period or Joining Availability'],
+  'Shortlisted':        ['Shortlisted','Shortlist','Screened','Profile Shortlisted'],
+  'Mail Sent to':       ['Mail Sent to','Mail Sent','Email Sent','Outreach Sent','Invite Sent'],
+  'Responded':          ['Responded','Response','Candidate Responded'],
+  'Fabric Invited':     ['Fabric Invited','Assessment Invited','Test Invited','Invited to Assessment'],
+  'Fabric Attended':    ['Fabric Attended','Assessment Attended','Test Attended','Attended Assessment'],
+  'Cheating Status':    ['Cheating Status','Cheating','Malpractice','Flagged'],
+  'Fabric Status':      ['Fabric Status','Assessment Status','Test Status','Assessment Result'],
+  'Video Invited':      ['Video Invited','Video Interview Invited'],
+  'Video Submitted':    ['Video Submitted','Video Interview Submitted'],
+  'Video Cleared':      ['Video Cleared','Video Status','Video Result'],
+  'Assessment Cleared': ['Assessment Cleared','Assessment Passed'],
+  'R1 Method':          ['R1_Method','R1 Method','Round 1 Method'],
+  'R1 Invited':         ['R1_Date_Sent','R1_Campaign_ID','R1_Batch_ID','R1 Invited','Round 1 Invited','Interview 1 Invited','First Round Invited'],
+  'R1 Attended':        ['R1_Submission_Date','R1 Attended','Round 1 Attended','Interview 1 Attended'],
+  'R1 Status':          ['R1_Status','R1 Status','Round 1 Status','Interview 1 Status','Round 1 Result','First Round Result'],
+  'R1 Score':           ['R1_Score','R1 Score'],
+  'R1 Reviewer':        ['R1_Reviewer','R1 Reviewer'],
+  'R1 Feedback':        ['R1_Feedback','R1 Feedback'],
+  'R2 Method':          ['R2_Method','R2 Method','Round 2 Method'],
+  'R2 Invited':         ['R2_Date_Sent','R2_Campaign_ID','R2_Batch_ID','R2 Invited','Round 2 Invited','Final Interview Invited'],
+  'R2 Attended':        ['R2_Submission_Date','R2 Attended','Round 2 Attended','Final Interview Attended'],
+  'R2 Status':          ['R2_Status','R2 Status','Round 2 Status','Final Interview Status'],
+  'R2 Score':           ['R2_Score','R2 Score'],
+  'R2 Reviewer':        ['R2_Reviewer','R2 Reviewer'],
+  'R2 Feedback':        ['R2_Feedback','R2 Feedback'],
+  'Final Status':       ['Final_Status','Final Status','Final Decision'],
+  'Offers Shared':      ['Offer_Letter_Status','Offers Shared','Offer Shared','Offer Sent','Offered'],
+  'Offer Accepted':     ['Offer Accepted','Accepted Offer','Offer Status'],
+  'Offer Roll Out':     ['Offer_Date','Offer Roll Out','Offer Rollout','Offer Date'],
+  'Joined':             ['Joining_Status','Joining_Date','Joined','Joining Date','Date Joined','Join Status'],
+  'Drop Off Reason':    ['Drop_Off_Reason','Drop Off Reason'],
+  'Contract Status':    ['Contract_Status','Contract Status'],
+  'NDA Status':         ['NDA_Status','NDA Status'],
+  'Payment Status':     ['Payment_Status','Payment Status'],
+  'Duplicate':          ['Duplicate','Duplicate Status'],
+  'This is an in-office role! Are you willing to relocate to Hyderabad?': ['This is an in-office role! Are you willing to relocate to Hyderabad?','Willing to Relocate','Relocation','Relocate'],
+  'Which shift are you most comfortable working in?': ['Which shift are you most comfortable working in?','Shift Preference','Preferred Shift','Shift'],
+  'If yes, please specify the format(s) you have experience annotating.': ['If yes, please specify the format(s) you have experience annotating.','Annotation Formats','Annotation Experience Type','Experience Format'],
+};
+
+/* ---- State ---- */
+let currentMetrics = null;
+let allRows = [];
+let currentFileName = '';
+let selectedRole = '';
+let currentViewRole = 'all';
+let autoRefreshTimer = null;
+let lastConnectedUrl = '';
+let userColumnMap = {};
+
+/* ---- Persist/load user column map ---- */
+function loadUserColumnMap() {
+  try { userColumnMap = JSON.parse(localStorage.getItem('funnelColMap') || '{}'); } catch(e) { userColumnMap = {}; }
+}
+function saveUserColumnMap() {
+  localStorage.setItem('funnelColMap', JSON.stringify(userColumnMap));
+}
+loadUserColumnMap();
+
+/* ---- Utility functions ---- */
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById('panel-' + name);
+  if (panel) panel.classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'funnel') animateFunnel();
+}
+
+function switchConnectTab(tab, btn) {
+  document.querySelectorAll('.ctab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['sheet','csv'].forEach(t => {
+    const p = document.getElementById('cpanel-' + t);
+    if (p) p.classList.toggle('hidden', t !== tab);
+  });
+}
+
+function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch])); }
+function normalize(v) { return String(v ?? '').trim(); }
+function normLower(v) { return normalize(v).toLowerCase(); }
+function hasValue(v) { return !EMPTY_VALUES.has(normLower(v)); }
+function isYes(v) { return normLower(v) === 'yes'; }
+function isMaybe(v) { return normLower(v) === 'maybe'; }
+function isYesOrMaybe(v) { const vl = normLower(v); return vl === 'yes' || vl === 'maybe'; }
+function formatNum(v) { return Number(v||0).toLocaleString('en-IN'); }
+function pct(num,den,digits=1) { return den>0?(num/den*100).toFixed(digits).replace(/\.0$/,'')+'%':'0%'; }
+function ratio(num,den) { return den>0?(num/den*100):0; }
+function safeDiv(num,den) { return den>0?num/den:0; }
+function valueOf(row,col) { return row[col]??''; }
+function countWhere(rows,col,pred) { return rows.reduce((s,row)=>s+(pred(valueOf(row,col),row)?1:0),0); }
+function countValid(rows,col) { return countWhere(rows,col,hasValue); }
+function countYes(rows,col) { return countWhere(rows,col,isYes); }
+function countYesMaybe(rows,col) { return countWhere(rows,col,isYesOrMaybe); }
+
+function findAlias(row, canonical) {
+  const aliases = FIELD_ALIASES[canonical] || [canonical];
+  const keys = Object.keys(row);
+  return aliases.find(a => Object.prototype.hasOwnProperty.call(row,a)) ||
+         keys.find(k => aliases.some(a => k.toLowerCase()===a.toLowerCase()));
+}
+
+function canonicalizeRows(rows, fileName) {
+  const fallbackRole = fileName.replace(/\.csv$/i,'').replace(/[_-]+/g,' ').trim() || 'Uploaded Role';
+  return rows.map(row => {
+    const next = { ...row };
+    /* Apply user column map first */
+    Object.entries(userColumnMap).forEach(([canonical, actualCol]) => {
+      if (actualCol && Object.prototype.hasOwnProperty.call(row, actualCol) && hasValue(row[actualCol])) {
+        next[canonical] = row[actualCol];
+      }
+    });
+    /* Then apply standard aliases */
+    Object.keys(FIELD_ALIASES).forEach(canonical => {
+      if (hasValue(next[canonical])) return;
+      const alias = findAlias(row, canonical);
+      if (alias) next[canonical] = row[alias];
+    });
+    next.__role = hasValue(next.Role) ? normalize(next.Role) : fallbackRole;
+    next.Role = next.__role;
+    next.__file = fileName;
+    return next;
+  });
+}
+
+function latestStage(row) {
+  const finalStatus = normLower(row['Final Status']);
+  const r2Status = normLower(row['R2 Status']);
+  const r1Status = normLower(row['R1 Status']||row['Fabric Status']||row['Video Cleared']);
+  if (isJoinedStatus(row.Joined)) return 'Joined';
+  if (hasValue(row['Offer Accepted'])) return 'Accepted';
+  if (isOfferShared(row['Offers Shared'])) return 'Offered';
+  if (finalStatus==='selected') return 'Final Selected';
+  if (finalStatus==='rejected') return 'Final Rejected';
+  if (finalStatus==='on hold') return 'Final On Hold';
+  if (r2Status==='selected') return 'R2 Selected';
+  if (r2Status==='rejected') return 'R2 Rejected';
+  if (r2Status==='on hold') return 'R2 On Hold';
+  if (rowHasActive(row,['R2 Invited','R2 Method'])) return 'R2 In Progress';
+  if (isPositiveStatus(r1Status)) return 'R1 Selected';
+  if (isNegativeStatus(r1Status)) return 'R1 Rejected';
+  if (r1Status==='on hold') return 'R1 On Hold';
+  if (rowHasActive(row,['R1 Invited','R1 Method','Fabric Invited','Video Invited'])) return 'R1 In Progress';
+  if (isYes(row.Responded)) return 'Responded';
+  if (isYesOrMaybe(row.Shortlisted)) return 'Shortlisted';
+  if (hasValue(row['Mail Sent to'])) return 'Mailed';
+  return 'Sourced';
+}
+
+function isPositiveStatus(v) { return ['yes','pass','passed','clear','cleared','selected','accepted','joined','shortlisted','qualified','signed','shared'].includes(normLower(v)); }
+function isNegativeStatus(v) { return ['no','fail','failed','reject','rejected','not selected','not cleared','disqualified','not interested'].includes(normLower(v)); }
+function isOfferShared(v) { return ['shared','yes','sent','offered'].includes(normLower(v)); }
+function isJoinedStatus(v) { return normLower(v)==='joined'||/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}$/.test(normalize(v)); }
+function isFinalSelected(v) { return normLower(v)==='selected'; }
+function isFinalRejected(v) { return normLower(v)==='rejected'; }
+function countPositive(rows,col) { return countWhere(rows,col,isPositiveStatus); }
+function countNegative(rows,col) { return countWhere(rows,col,isNegativeStatus); }
+function hasSignal(rows,cols) { return cols.some(col=>countValid(rows,col)>0||countYes(rows,col)>0); }
+function isActiveStageValue(v) { const vl=normLower(v); return hasValue(v)&&!['no','not invited','not attended','not submitted','absent','not applicable','on hold','not interested'].includes(vl); }
+function countActive(rows,col) { return countWhere(rows,col,isActiveStageValue); }
+function rowHasYes(row,cols) { return cols.some(col=>isYes(row[col])); }
+function rowHasValue(row,cols) { return cols.some(col=>hasValue(row[col])); }
+function rowHasActive(row,cols) { return cols.some(col=>isActiveStageValue(row[col])); }
+function rowHasPositive(row,cols) { return cols.some(col=>isPositiveStatus(row[col])); }
+function rowHasNegative(row,cols) { return cols.some(col=>isNegativeStatus(row[col])); }
+
+function buildUnifiedR1Round(rows) {
+  const hasFabricOrVideo = hasSignal(rows,['Fabric Invited','Fabric Attended','Fabric Status','Video Invited','Video Submitted','Video Cleared']);
+  const invitedCols=['Fabric Invited','Video Invited','R1 Invited','R1 Method'];
+  const completedCols=['Fabric Attended','Video Submitted','R1 Attended'];
+  const statusCols=['Fabric Status','Video Cleared','R1 Status'];
+  const invited=rows.filter(r=>rowHasActive(r,invitedCols)).length;
+  const completed=rows.filter(r=>rowHasActive(r,completedCols)).length;
+  const passed=rows.filter(r=>rowHasPositive(r,statusCols)).length;
+  const rejected=rows.filter(r=>rowHasNegative(r,statusCols)).length;
+  const tracked=rows.filter(r=>rowHasValue(r,statusCols)||rowHasYes(r,completedCols)||rowHasValue(r,completedCols)).length||completed||invited;
+  return { key:'r1Unified', label:hasFabricOrVideo?'R1 - Fabric AI + Video':'R1 - First Evaluation', signal:invited||completed||tracked||passed||rejected, invited, completed, passed, rejected, tracked, showRate:ratio(completed,invited), passRate:ratio(passed,tracked) };
+}
+
+function buildRoundMetrics(rows) {
+  const configs=[
+    {key:'fabric',label:'R1 - Fabric/Test',invited:'Fabric Invited',completed:'Fabric Attended',status:'Fabric Status'},
+    {key:'video',label:'R1 - Video/Submission',invited:'Video Invited',completed:'Video Submitted',status:'Video Cleared'},
+    {key:'r1',label:'R1 - Interview/Other',invited:'R1 Invited',completed:'R1 Attended',status:'R1 Status'},
+    {key:'r2',label:'R2 - Final/Selection',invited:'R2 Invited',completed:'R2 Attended',status:'R2 Status',positive:isFinalSelected,negative:v=>['rejected','absent from hiring','not interested'].includes(normLower(v))},
+  ];
+  const layerRounds=configs.map(config=>{
+    const signal=hasSignal(rows,[config.invited,config.completed,config.status]);
+    const invited=countActive(rows,config.invited);
+    const completed=countActive(rows,config.completed);
+    const passed=config.positive?countWhere(rows,config.status,config.positive):countPositive(rows,config.status);
+    const rejected=config.negative?countWhere(rows,config.status,config.negative):countNegative(rows,config.status);
+    const tracked=countValid(rows,config.status)||completed||invited;
+    return {...config,signal,invited,completed,passed,rejected,tracked,showRate:ratio(completed,invited),passRate:ratio(passed,tracked)};
+  }).filter(r=>r.signal||r.invited||r.completed||r.tracked||r.passed||r.rejected);
+  const unifiedR1=buildUnifiedR1Round(rows);
+  return unifiedR1.signal?[unifiedR1,...layerRounds]:layerRounds;
+}
+
+function firstEvaluationRound(rounds) {
+  return rounds.find(r=>r.key==='r1Unified')||rounds.find(r=>r.key!=='r2'&&(r.tracked||r.completed||r.invited))||{label:'R1 - First Evaluation',invited:0,completed:0,passed:0,rejected:0,tracked:0,showRate:0,passRate:0};
+}
+
+/* ---- CSV parser ---- */
+function parseCSV(text) {
+  const rows=[]; let row=[],field='',inQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const char=text[i],next=text[i+1];
+    if(inQuotes){if(char==='"'&&next==='"'){field+='"';i++;}else if(char==='"'){inQuotes=false;}else{field+=char;}}
+    else{if(char==='"')inQuotes=true;else if(char===','){row.push(field);field='';}else if(char==='\n'){row.push(field);rows.push(row);row=[];field='';}else if(char!=='\r')field+=char;}
+  }
+  row.push(field);
+  if(row.length>1||hasValue(row[0]))rows.push(row);
+  if(!rows.length)throw new Error('The CSV is empty.');
+  const headers=rows.shift().map(h=>normalize(h).replace(/^﻿/,''));
+  if(!headers.some(Boolean))throw new Error('No CSV headers found.');
+  return rows.filter(r=>r.some(hasValue)).map(values=>{const obj={};headers.forEach((h,i)=>{obj[h]=values[i]??'';});return obj;});
+}
+
+/* ---- Google Sheets URL converter ---- */
+function toCSVUrl(url) {
+  const m = url.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (!m) return url;
+  const gid = (url.match(/[#&?]gid=(\d+)/)||[])[1] || '0';
+  return `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv&gid=${gid}`;
+}
+
+async function fetchAndLoad(url) {
+  const csvUrl = toCSVUrl(url.trim());
+  const res = await fetch(csvUrl);
+  if (!res.ok) throw new Error(`Could not fetch data: HTTP ${res.status}. Make sure the sheet is shared publicly.`);
+  const text = await res.text();
+  if (!text.trim()) throw new Error('Fetched file is empty.');
+  const rows = parseCSV(text);
+  if (!rows.length) throw new Error('No data rows found in the fetched file.');
+  return { rows, fileName: url.replace(/.*\/([^/?#]+).*/,'$1') || 'Connected Sheet' };
+}
+
+function startAutoRefresh(intervalSeconds) {
+  stopAutoRefresh();
+  if (!intervalSeconds || !lastConnectedUrl) return;
+  const el = document.getElementById('refreshStatus');
+  autoRefreshTimer = setInterval(async () => {
+    try {
+      const { rows, fileName } = await fetchAndLoad(lastConnectedUrl);
+      allRows = canonicalizeRows(rows, fileName);
+      selectedRole = '';
+      renderDashboard(computeDashboardMetrics(allRows), fileName, allRows.length);
+      if (el) el.textContent = 'Updated ' + new Date().toLocaleTimeString();
+    } catch(e) { if (el) el.textContent = 'Refresh failed: ' + e.message; }
+  }, intervalSeconds * 1000);
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+}
+
+/* ---- Connect button handler ---- */
+document.getElementById('connectBtn').addEventListener('click', async () => {
+  const url = document.getElementById('sheetUrl').value.trim();
+  if (!url) return showError('Please enter a Google Sheets or CSV URL.');
+  const btn = document.getElementById('connectBtn');
+  btn.disabled = true; btn.textContent = 'Connecting…';
+  showError('');
+  try {
+    const { rows, fileName } = await fetchAndLoad(url);
+    allRows = canonicalizeRows(rows, fileName);
+    lastConnectedUrl = url;
+    localStorage.setItem('funnelLastUrl', url);
+    selectedRole = '';
+    currentFileName = fileName;
+    ['nameFilter','soulFilter','phoneFilter','emailFilter','roleFilter','jobSearch'].forEach(id=>{document.getElementById(id).value='';});
+    renderDashboard(computeDashboardMetrics(allRows), currentFileName, allRows.length);
+    const iv = parseInt(document.getElementById('refreshInterval').value, 10);
+    startAutoRefresh(iv);
+    document.getElementById('refreshStatus').textContent = iv ? 'Live' : '';
+  } catch(e) { showError(e.message||'Could not connect.'); }
+  finally { btn.disabled=false; btn.textContent='Connect'; }
+});
+
+document.getElementById('refreshInterval').addEventListener('change', e => {
+  startAutoRefresh(parseInt(e.target.value, 10));
+});
+
+/* Restore last URL on load */
+(function restoreUrl() {
+  const saved = localStorage.getItem('funnelLastUrl');
+  if (saved) document.getElementById('sheetUrl').value = saved;
+})();
+
+/* ---- CSV file upload ---- */
+function readFileAsText(file) {
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(String(r.result||''));
+    r.onerror=()=>reject(new Error(`Could not read ${file.name}.`));
+    r.readAsText(file);
+  });
+}
+
+document.getElementById('csvInput').addEventListener('change', async event => {
+  const files=[...(event.target.files||[])];
+  if(!files.length)return;
+  document.getElementById('datasetStatus').innerHTML=`<strong>${formatNum(files.length)} file${files.length>1?'s':''}</strong><br>Loading...`;
+  showError('');
+  try {
+    const loaded = await Promise.all(files.map(async file => {
+      const rows = parseCSV(await readFileAsText(file));
+      if(!rows.length)throw new Error(`${file.name} has no data rows after the header.`);
+      return canonicalizeRows(rows, file.name);
+    }));
+    allRows = loaded.flat();
+    stopAutoRefresh();
+    lastConnectedUrl = '';
+    selectedRole = '';
+    currentFileName = files.length===1?files[0].name:`${files.length} role files`;
+    ['nameFilter','soulFilter','phoneFilter','emailFilter','roleFilter','jobSearch'].forEach(id=>{document.getElementById(id).value='';});
+    renderDashboard(computeDashboardMetrics(allRows), currentFileName, allRows.length);
+  } catch(e) { showError(e.message||'Could not parse these CSV files.'); }
+});
+
+/* ---- Column mapping modal ---- */
+function openColMapModal() {
+  const body = document.getElementById('colMapBody');
+  body.innerHTML = MUST_HAVE_FIELDS.map(f => {
+    const saved = userColumnMap[f.canonical] || '';
+    return `<div class="modal-field-row">
+      <div><div class="mfr-label">${escapeHtml(f.label)}</div><div class="mfr-hint">default: ${escapeHtml(f.hint)}</div></div>
+      <div class="mfr-type">${escapeHtml(f.type)}</div>
+      <input class="mfr-input" data-canonical="${escapeHtml(f.canonical)}" placeholder="${escapeHtml(f.hint)}" value="${escapeHtml(saved)}">
+    </div>`;
+  }).join('');
+  document.getElementById('colMapOverlay').classList.remove('hidden');
+  document.getElementById('colMapSavedBadge').classList.remove('show');
+}
+function closeColMapModal() {
+  document.getElementById('colMapOverlay').classList.add('hidden');
+}
+document.getElementById('colMapBtn').addEventListener('click', openColMapModal);
+document.getElementById('colMapClose').addEventListener('click', closeColMapModal);
+document.getElementById('colMapOverlay').addEventListener('click', e => { if(e.target===e.currentTarget)closeColMapModal(); });
+
+document.getElementById('colMapSave').addEventListener('click', () => {
+  document.querySelectorAll('.mfr-input').forEach(inp => {
+    const canonical = inp.getAttribute('data-canonical');
+    const val = inp.value.trim();
+    if (val) userColumnMap[canonical] = val;
+    else delete userColumnMap[canonical];
+  });
+  saveUserColumnMap();
+  document.getElementById('colMapSavedBadge').classList.add('show');
+  if (allRows.length) {
+    /* Re-canonicalize raw data with new mappings — reparse if URL connected */
+    if (lastConnectedUrl) document.getElementById('connectBtn').click();
+  }
+});
+document.getElementById('colMapReset').addEventListener('click', () => {
+  userColumnMap = {};
+  saveUserColumnMap();
+  document.querySelectorAll('.mfr-input').forEach(inp => { inp.value = ''; });
+  document.getElementById('colMapSavedBadge').classList.add('show');
+});
+
+/* ---- Role view selector ---- */
+document.getElementById('roleSelect').addEventListener('change', e => {
+  currentViewRole = e.target.value;
+  localStorage.setItem('funnelViewRole', currentViewRole);
+  applyRoleView();
+  if (currentMetrics) renderDashboard(currentMetrics, currentFileName, allRows.length);
+});
+
+/* Restore saved role */
+(function restoreRole() {
+  const saved = localStorage.getItem('funnelViewRole') || 'all';
+  currentViewRole = saved;
+  const sel = document.getElementById('roleSelect');
+  if (sel) sel.value = saved;
+})();
+
+function applyRoleView() {
+  const cfg = ROLE_CONFIG[currentViewRole] || ROLE_CONFIG.all;
+  const tabs = document.querySelectorAll('#mainTabs .tab-btn');
+  let firstVisible = null;
+  tabs.forEach(btn => {
+    const tab = btn.getAttribute('data-tab');
+    const hidden = !cfg.tabs.includes(tab);
+    btn.classList.toggle('role-hidden', hidden);
+    if (!hidden && !firstVisible) firstVisible = btn;
+  });
+  /* If active tab is now hidden, switch to first visible */
+  const activeBtn = document.querySelector('#mainTabs .tab-btn.active');
+  if (activeBtn && activeBtn.classList.contains('role-hidden') && firstVisible) {
+    switchTab(firstVisible.getAttribute('data-tab'), firstVisible);
+  }
+  /* Show/hide freelancer section in overview */
+  const flVis = currentViewRole === 'all' || currentViewRole === 'freelancer_ops' || currentViewRole === 'hr';
+  ['flSection','flKpis'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = flVis ? '' : 'none';
+  });
+}
+
+/* ---- Filter logic ---- */
+function matchesFilter(row,col,q,digitsOnly=false) {
+  if(!q)return true;
+  const src=normalize(row[col]);
+  if(digitsOnly)return src.replace(/\D/g,'').includes(q.replace(/\D/g,''));
+  return src.toLowerCase().includes(q.toLowerCase());
+}
+function getFilteredRows() {
+  const name=normalize(document.getElementById('nameFilter').value);
+  const soul=normalize(document.getElementById('soulFilter').value);
+  const phone=normalize(document.getElementById('phoneFilter').value);
+  const email=normalize(document.getElementById('emailFilter').value);
+  const role=normalize(document.getElementById('roleFilter').value);
+  return allRows.filter(row=>
+    (!selectedRole||normalize(row.Role)===selectedRole)&&
+    matchesFilter(row,'Full Name',name)&&
+    matchesFilter(row,'Soul Id',soul)&&
+    matchesFilter(row,'Contact Number',phone,true)&&
+    (!email||matchesFilter(row,'Email',email)||matchesFilter(row,'Secondary Email',email))&&
+    matchesFilter(row,'Role',role)
+  );
+}
+function applyFilters() {
+  if(!allRows.length)return;
+  const filteredRows=getFilteredRows();
+  renderDashboard(computeDashboardMetrics(filteredRows),currentFileName,allRows.length);
+}
+
+['nameFilter','soulFilter','phoneFilter','emailFilter','roleFilter'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',applyFilters);
+});
+document.getElementById('jobSearch').addEventListener('input',renderJobSidebar);
+document.getElementById('clearFilters').addEventListener('click',()=>{
+  ['nameFilter','soulFilter','phoneFilter','emailFilter','roleFilter'].forEach(id=>{document.getElementById(id).value='';});
+  selectedRole='';
+  applyFilters();
+});
+
+/* ---- Metrics ---- */
+function countBy(rows,col,options={}) {
+  if(!rows.length||!(col in rows[0]))return[];
+  const map=new Map();
+  rows.forEach(row=>{
+    let value=normalize(row[col]);
+    if(!hasValue(value))return;
+    if(options.filter&&!options.filter(row,value))return;
+    if(options.group)value=options.group(value,row);
+    map.set(value,(map.get(value)||0)+1);
+  });
+  return [...map.entries()].map(([label,count])=>({label,count})).sort((a,b)=>b.count-a.count);
+}
+
+function sourceGroup(pool) {
+  const p=normLower(pool);
+  if(p.startsWith('campus'))return'Campus Drives';
+  if(p.includes('hiring drive'))return'Hiring Drives';
+  if(p.includes('inbound')||p.includes('job'))return'Inbound / Job Posting';
+  if(p.includes('internal'))return'Internal Database';
+  if(p.includes('head'))return'Head-hunting';
+  if(p.includes('referral'))return'Referral';
+  if(p.includes('partner'))return'Partners';
+  return normalize(pool)||'Other';
+}
+
+function buildSourceEfficiency(rows) {
+  const map=new Map();
+  rows.forEach(row=>{
+    const label=sourceGroup(row['Pool Name']);
+    if(!map.has(label))map.set(label,{label,sourced:0,responded:0,shortlisted:0,joined:0});
+    const item=map.get(label);
+    item.sourced+=1;
+    if(isYes(row.Responded))item.responded+=1;
+    if(isYesOrMaybe(row.Shortlisted))item.shortlisted+=1;
+    if(isJoinedStatus(row.Joined))item.joined+=1;
+  });
+  return [...map.values()].map(item=>({...item,responseRate:ratio(item.responded,item.sourced),joinRate:ratio(item.joined,item.sourced)})).sort((a,b)=>b.joined-a.joined||b.joinRate-a.joinRate||b.sourced-a.sourced).slice(0,6);
+}
+
+function topN(items,n=6) {
+  if(items.length<=n)return items;
+  const head=items.slice(0,n-1);
+  const rest=items.slice(n-1).reduce((s,i)=>s+i.count,0);
+  return[...head,{label:'Other',count:rest}];
+}
+
+function roleStats(rows) {
+  const map=new Map();
+  rows.forEach(row=>{
+    const role=normalize(row.Role)||'Unknown role';
+    if(!map.has(role))map.set(role,{label:role,count:0,joined:0,offered:0,responded:0,shortlisted:0});
+    const item=map.get(role);
+    item.count+=1;
+    if(isJoinedStatus(row.Joined))item.joined+=1;
+    if(isOfferShared(row['Offers Shared']))item.offered+=1;
+    if(isYes(row.Responded))item.responded+=1;
+    if(isYesOrMaybe(row.Shortlisted))item.shortlisted+=1;
+  });
+  return[...map.values()].sort((a,b)=>b.count-a.count||a.label.localeCompare(b.label));
+}
+
+function buildDataQuality(rows) {
+  const total=rows.length||1;
+  const checks=[
+    {label:'Names',value:ratio(countValid(rows,'Full Name'),total)},
+    {label:'Phone',value:ratio(countValid(rows,'Contact Number'),total)},
+    {label:'Source',value:ratio(countValid(rows,'Pool Name'),total)},
+    {label:'Role',value:ratio(countValid(rows,'Role'),total)},
+    {label:'Stage',value:ratio(rows.filter(r=>latestStage(r)!=='Sourced').length,total)},
+  ];
+  const score=checks.reduce((s,i)=>s+i.value,0)/checks.length;
+  const missing=checks.filter(i=>i.value<65).map(i=>i.label);
+  return{score,checks,missing};
+}
+
+function computeDashboardMetrics(rows) {
+  const total=rows.length;
+  const counts={
+    total,
+    shortlisted:countYes(rows,'Shortlisted'),
+    shortlistedMaybe:countWhere(rows,'Shortlisted',isMaybe),
+    mailSent:countValid(rows,'Mail Sent to'),
+    responded:countYes(rows,'Responded'),
+    fabricInvited:countYes(rows,'Fabric Invited'),
+    fabricAttended:countYes(rows,'Fabric Attended'),
+    cheating:countYes(rows,'Cheating Status'),
+    cheatingTracked:countValid(rows,'Cheating Status'),
+    fabricPass:countPositive(rows,'Fabric Status'),
+    fabricFail:countNegative(rows,'Fabric Status'),
+    videoInvited:countYes(rows,'Video Invited'),
+    videoSubmitted:countYes(rows,'Video Submitted'),
+    videoCleared:countPositive(rows,'Video Cleared'),
+    videoRejected:countNegative(rows,'Video Cleared'),
+    assessmentCleared:countYes(rows,'Assessment Cleared'),
+    r1Passed:countPositive(rows,'R1 Status'),
+    r1Rejected:countNegative(rows,'R1 Status'),
+    r2Invited:countActive(rows,'R2 Invited'),
+    r2Selected:countWhere(rows,'R2 Status',isFinalSelected),
+    r2Rejected:countWhere(rows,'R2 Status',isFinalRejected),
+    r2Absent:countWhere(rows,'R2 Status',v=>normLower(v).includes('absent')),
+    r2Pending:countWhere(rows,'R2 Status',v=>['tbd','tbs','untracked','on hold'].includes(normLower(v))),
+    finalSelected:countWhere(rows,'Final Status',isFinalSelected),
+    finalRejected:countWhere(rows,'Final Status',isFinalRejected),
+    offersShared:countWhere(rows,'Offers Shared',isOfferShared),
+    offerAccepted:countValid(rows,'Offer Accepted')||countWhere(rows,'Joined',isJoinedStatus),
+    offerRollout:countActive(rows,'Offer Roll Out'),
+    joined:countWhere(rows,'Joined',isJoinedStatus),
+    duplicate:countWhere(rows,'Duplicate',v=>hasValue(v)&&normLower(v)!=='0'&&normLower(v)!=='no'),
+    relocationYes:countWhere(rows,'This is an in-office role! Are you willing to relocate to Hyderabad?',v=>normLower(v).startsWith('yes')),
+    relocationAnswered:countValid(rows,'This is an in-office role! Are you willing to relocate to Hyderabad?'),
+    contractShared:countWhere(rows,'Contract Status',v=>normLower(v)==='shared'),
+    contractSigned:countWhere(rows,'Contract Status',v=>normLower(v)==='signed'),
+    ndaShared:countWhere(rows,'NDA Status',v=>normLower(v)==='shared'),
+    ndaSigned:countWhere(rows,'NDA Status',v=>normLower(v)==='signed'),
+    paymentInitiated:countWhere(rows,'Payment Status',v=>normLower(v)==='initiated'),
+    paymentCleared:countWhere(rows,'Payment Status',v=>normLower(v)==='cleared'),
+  };
+  const roundMetrics=buildRoundMetrics(rows);
+  const primaryR1=firstEvaluationRound(roundMetrics);
+  counts.r1Invited=primaryR1.invited;
+  counts.r1Completed=primaryR1.completed;
+  counts.r1Passed=primaryR1.passed||counts.r1Passed;
+  counts.r1Rejected=primaryR1.rejected||counts.r1Rejected;
+  const r1Total=counts.r1Passed+counts.r1Rejected||primaryR1.tracked;
+  counts.r2Selected=counts.r2Selected||counts.finalSelected;
+  counts.r2Rejected=counts.r2Rejected||counts.finalRejected;
+  const r2Total=counts.r2Selected+counts.r2Rejected+counts.r2Absent+counts.r2Pending;
+  const funnel=[
+    ['Total Sourced',counts.total,'BASE','badge-purple'],
+    ['Mail Sent',counts.mailSent,'OUTREACH','badge-yellow'],
+    ['Responded',counts.responded,'ENGAGED','badge-orange'],
+    ['Shortlisted',counts.shortlisted,'SCREENED','badge-orange'],
+    ['R1 Invited',counts.r1Invited,'R1 INVITED','badge-purple'],
+    ['R1 Completed',counts.r1Completed,'R1 DONE','badge-orange'],
+    ['R1 Passed',counts.r1Passed,'R1 PASSED','badge-green'],
+    ['R2 Invited',counts.r2Invited,'INTERVIEW','badge-purple'],
+    ['Offers Shared',counts.offersShared,'OFFERED','badge-green'],
+    ['Offer Accepted',counts.offerAccepted,'ACCEPTED','badge-green'],
+    ['Joined',counts.joined,'JOINED','badge-green'],
+  ].map(([label,count,status,badge],i)=>({label,count,status,badge,color:COLORS[i%COLORS.length]}));
+  const sourceBreakdown=topN(countBy(rows,'Pool Name',{group:sourceGroup}),7);
+  const campusBreakdown=topN(countBy(rows,'Pool Name',{filter:(_,value)=>normLower(value).startsWith('campus')}),7);
+  const joinedBySource=topN(countBy(rows.filter(r=>isJoinedStatus(r.Joined)),'Pool Name',{group:sourceGroup}),7);
+  const timeline=topN(countBy(rows,'Date of Addition'),8);
+  const shifts=topN(countBy(rows,'Which shift are you most comfortable working in?'),6);
+  const degrees=topN(countBy(rows,'Degree'),7);
+  const departments=topN(countBy(rows,'Department'),7);
+  const annotation=topN(countBy(rows,'If yes, please specify the format(s) you have experience annotating.'),9);
+  const sourceEfficiency=buildSourceEfficiency(rows);
+  const roleMix=topN(countBy(rows,'Role'),8);
+  const roleFullStats=roleStats(rows);
+  const dataQuality=buildDataQuality(rows);
+  return{rows,counts,r1Total,r2Total,funnel,sourceBreakdown,campusBreakdown,joinedBySource,timeline,shifts,degrees,departments,annotation,sourceEfficiency,roleMix,roleFullStats,dataQuality,roundMetrics,primaryR1};
+}
+
+function getStepInsights(metrics) {
+  const steps=metrics.funnel.slice(1).map((stage,i)=>{
+    const prev=metrics.funnel[i];
+    return{label:`${prev.label} to ${stage.label}`,from:prev.count,to:stage.count,conversion:ratio(stage.count,prev.count),drop:ratio(Math.max(prev.count-stage.count,0),prev.count)};
+  }).filter(i=>i.from>0);
+  const bottleneck=[...steps].sort((a,b)=>b.drop-a.drop)[0];
+  const strongest=[...steps].filter(i=>i.to>0).sort((a,b)=>b.conversion-a.conversion)[0];
+  return{bottleneck,strongest};
+}
+
+/* ---- Render helpers ---- */
+function renderKpi(label,value,sub,color) {
+  return `<div class="kpi-card" style="--kpi-color:${color};"><div class="kpi-label">${escapeHtml(label)}</div><div class="kpi-value">${escapeHtml(value)}</div>${sub?`<div class="kpi-sub">${escapeHtml(sub)}</div>`:''}</div>`;
+}
+function renderBarChart(id,items,denominator=null,opts={}) {
+  const el=document.getElementById(id);
+  if(!items||!items.length){el.innerHTML='<div class="no-data">No data</div>';return;}
+  const max=denominator||Math.max(...items.map(i=>i.count),1);
+  el.innerHTML=items.map((item,i)=>{
+    const width=Math.max(ratio(item.count,max),item.count?3:0);
+    const color=opts.colors?.[i]||COLORS[i%COLORS.length];
+    const label=escapeHtml(item.label);
+    const count=formatNum(item.count);
+    const right=opts.showPercent===false?count:pct(item.count,denominator||max);
+    return`<div class="bar-row"><div class="bar-row-label" title="${label}">${label}</div><div class="bar-track"><div class="bar-fill" style="width:${width}%;background:linear-gradient(90deg,${color},${color});color:${i%3===1||color.includes('accent4')?'#000':'#fff'};min-width:${item.count?'36px':'0'};">${count}</div></div><div class="bar-num">${right}</div></div>`;
+  }).join('');
+}
+function renderDonut(id,items,total) {
+  const el=document.getElementById(id);
+  if(!items.length){el.innerHTML='<div class="no-data">No data</div>';return;}
+  const r=50,c=2*Math.PI*r;let offset=0;
+  const circles=items.slice(0,5).map((item,i)=>{
+    const len=safeDiv(item.count,total)*c;
+    const circle=`<circle cx="70" cy="70" r="50" fill="none" stroke="${COLORS[i%COLORS.length]}" stroke-width="22" stroke-dasharray="${len} ${c-len}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)"/>`;
+    offset+=len;return circle;
+  }).join('');
+  const legend=items.slice(0,5).map((item,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${COLORS[i%COLORS.length]}"></div>${escapeHtml(item.label)}<span class="legend-val">${formatNum(item.count)}</span></div>`).join('');
+  el.innerHTML=`<div class="donut-wrap"><svg class="donut-svg" width="140" height="140" viewBox="0 0 140 140"><circle cx="70" cy="70" r="50" fill="none" stroke="var(--surface2)" stroke-width="22"/>${circles}<text x="70" y="66" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-size="18" font-weight="800" fill="var(--text)">${formatNum(total)}</text><text x="70" y="82" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="var(--muted)">respondents</text></svg><div class="donut-legend">${legend}</div></div>`;
+}
+
+function selectRole(role) {
+  selectedRole=role||'';
+  document.getElementById('roleFilter').value='';
+  applyFilters();
+}
+
+function renderJobSidebar() {
+  const el=document.getElementById('jobList');
+  if(!allRows.length){el.innerHTML='<div class="job-empty">Connect data to see roles here.</div>';return;}
+  const query=normLower(document.getElementById('jobSearch')?.value||'');
+  const roles=roleStats(allRows).filter(role=>!query||normLower(role.label).includes(query));
+  const totalJoined=allRows.filter(r=>isJoinedStatus(r.Joined)).length;
+  const buttons=[
+    {label:'All hiring roles',count:allRows.length,joined:totalJoined,offered:allRows.filter(r=>isOfferShared(r['Offers Shared'])).length,role:''},
+    ...roles.map(role=>({...role,role:role.label}))
+  ];
+  el.innerHTML=buttons.map(item=>`<button class="job-btn ${selectedRole===item.role?'active':''}" type="button" data-role="${escapeHtml(item.role)}"><div class="job-name"><span class="job-dot"></span>${escapeHtml(item.label)}</div><div class="job-meta"><span>${formatNum(item.count)} candidates</span><span>${formatNum(item.offered)} offered</span><span>${formatNum(item.joined)} joined</span></div></button>`).join('');
+  el.querySelectorAll('.job-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>selectRole(btn.getAttribute('data-role')||''));
+  });
+}
+
+function renderWorkspaceHeader(metrics,sourceTotal) {
+  const c=metrics.counts;
+  const cfg=ROLE_CONFIG[currentViewRole]||ROLE_CONFIG.all;
+  const title=selectedRole||'All Hiring Roles';
+  document.getElementById('workspaceTitle').textContent=title;
+  document.getElementById('workspaceSubtitle').textContent=selectedRole?'Dedicated supply dashboard for this job opening.':'Combined supply command center across uploaded job openings.';
+  document.getElementById('workspaceChip').textContent=selectedRole?'Single job view':`${formatNum(roleStats(allRows).length)} jobs loaded`;
+  document.getElementById('workspaceChip').style.color=cfg.color;
+  document.getElementById('opsStrip').innerHTML=[
+    ['Candidates',formatNum(c.total)],
+    ['Roles',formatNum(metrics.roleMix.length||(selectedRole?1:roleStats(allRows).length))],
+    ['Offered',formatNum(c.offersShared)],
+    ['Joined',formatNum(c.joined)],
+  ].map(([label,value])=>`<div class="ops-item"><div class="ops-label">${label}</div><div class="ops-value">${value}</div></div>`).join('');
+}
+
+function buildAiBrief(metrics,sourceTotal) {
+  const c=metrics.counts;
+  const{bottleneck,strongest}=getStepInsights(metrics);
+  const topSource=metrics.sourceEfficiency[0];
+  const primary=metrics.primaryR1;
+  return{
+    headline:selectedRole?`${selectedRole}: ${formatNum(c.total)} candidates, ${formatNum(c.joined)} joined`:`${formatNum(metrics.roleMix.length)} job openings, ${formatNum(c.total)} candidates in view`,
+    health:`Hire rate is ${pct(c.joined,c.total)} with ${formatNum(c.offersShared)} offers shared and ${formatNum(c.offerAccepted)} accepted.`,
+    bottleneck:bottleneck?`${bottleneck.label} is the largest drop at ${bottleneck.drop.toFixed(1)}%.`:'No bottleneck detected yet.',
+    source:topSource?`${topSource.label} is currently the strongest source by joined count (${formatNum(topSource.joined)} joined).`:'No source performance data detected.',
+    rounds:`${primary.label} is the primary evaluation layer with ${pct(primary.passed,primary.tracked)} pass rate across ${formatNum(primary.tracked)} tracked candidates.`,
+    actions:[
+      bottleneck?`Prioritise fixing ${bottleneck.label.toLowerCase()} before adding more top-of-funnel volume.`:'Load more round data to identify the main constraint.',
+      topSource?`Protect and scale ${topSource.label} while checking quality against downstream joins.`:'Add/normalise source columns to compare channels.',
+      c.offerAccepted<c.offersShared?'Review offer acceptance blockers and joining follow-up cadence.':'Offer-to-join movement looks stable in this view.',
+      metrics.dataQuality.score<75?`Clean low-coverage fields: ${metrics.dataQuality.missing.join(', ')||'stage data'}.`:'Data coverage is strong enough for operating decisions.'
+    ]
+  };
+}
+
+function renderAiPanels(metrics,sourceTotal) {
+  const brief=buildAiBrief(metrics,sourceTotal);
+  const preview=`<div class="ai-note"><div class="ai-note-title">${escapeHtml(brief.headline)}</div><div class="ai-note-body">${escapeHtml(brief.health)} ${escapeHtml(brief.bottleneck)}</div></div>`;
+  document.getElementById('aiSummaryPreview').innerHTML=preview;
+  document.getElementById('aiBrief').innerHTML=`
+    <div class="ai-note"><div class="ai-note-title">Executive Readout</div><div class="ai-note-body">${escapeHtml(brief.headline)}. ${escapeHtml(brief.health)}</div></div>
+    <div class="ai-note"><div class="ai-note-title">Funnel Diagnosis</div><div class="ai-note-body">${escapeHtml(brief.bottleneck)} ${escapeHtml(brief.rounds)}</div></div>
+    <div class="ai-note"><div class="ai-note-title">Source Signal</div><div class="ai-note-body">${escapeHtml(brief.source)}</div></div>
+    <div class="ai-note"><div class="ai-note-title">Recommended Actions</div><div class="ai-action-list">${brief.actions.map(a=>`<div class="ai-action">${escapeHtml(a)}</div>`).join('')}</div></div>
+  `;
+}
+
+function renderDataReadiness(metrics) {
+  const q=metrics.dataQuality;
+  const readiness=q.score>=85?'Strong':q.score>=65?'Usable':'Needs cleanup';
+  document.getElementById('dataReadiness').innerHTML=`<div class="readiness-card"><div class="score-row"><div><div class="score-value">${q.score.toFixed(0)}%</div><div class="score-caption">${readiness} data readiness for this view</div></div></div><div class="quality-list">${q.checks.map(item=>`<div class="quality-row"><div>${escapeHtml(item.label)}</div><div class="quality-track"><div class="quality-fill" style="width:${Math.max(item.value,2)}%"></div></div><div>${item.value.toFixed(0)}%</div></div>`).join('')}</div><div class="schema-pill-row">${q.checks.map(item=>`<span class="schema-pill ${item.value>=65?'ok':'warn'}">${escapeHtml(item.label)} ${item.value>=65?'ok':'low'}</span>`).join('')}</div></div>`;
+}
+
+function renderRoleComparison(metrics) {
+  const rows=metrics.roleFullStats;
+  document.getElementById('roleComparison').innerHTML=rows.length?`<div class="role-compare-wrap"><table class="mini-table"><thead><tr><th>Role</th><th>Candidates</th><th>Responded</th><th>Shortlisted</th><th>Offered</th><th>Joined</th><th>Hire Rate</th></tr></thead><tbody>${rows.map(item=>`<tr><td class="table-strong">${escapeHtml(item.label)}</td><td>${formatNum(item.count)}</td><td>${pct(item.responded,item.count)}</td><td>${pct(item.shortlisted,item.count)}</td><td>${formatNum(item.offered)}</td><td>${formatNum(item.joined)}</td><td>${pct(item.joined,item.count)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="no-data">No roles found</div>';
+}
+
+function renderRecords(metrics) {
+  const rows=metrics.rows;
+  const isOps = currentViewRole === 'freelancer_ops';
+  const columns = isOps ? [
+    ['Role', row=>row.Role||'-'],
+    ['Candidate', row=>`<div class="records-name">${escapeHtml(row['Full Name']||'Unnamed')}</div><div class="records-email">${escapeHtml(row.Email||'')}</div>`],
+    ['Phone', row=>row['Contact Number']||'-'],
+    ['Joined', row=>row.Joined||'-'],
+    ['Contract', row=>row['Contract Status']||'-'],
+    ['NDA', row=>row['NDA Status']||'-'],
+    ['Payment', row=>row['Payment Status']||'-'],
+    ['File', row=>row.__file||'-'],
+  ] : [
+    ['Role', row=>row.Role||'-'],
+    ['Candidate', row=>`<div class="records-name">${escapeHtml(row['Full Name']||'Unnamed')}</div><div class="records-email">${escapeHtml(row.Email||'')}</div>`],
+    ['Soul ID', row=>row['Soul Id']||'-'],
+    ['Phone', row=>row['Contact Number']||'-'],
+    ['Source', row=>row['Pool Name']||'-'],
+    ['Stage', row=>`<span class="stage-chip">${escapeHtml(latestStage(row))}</span>`],
+    ['Shortlisted', row=>row.Shortlisted||'-'],
+    ['R1 Method', row=>row['R1 Method']||'-'],
+    ['R1 Status', row=>row['Fabric Status']||row['Video Cleared']||row['R1 Status']||'-'],
+    ['R1 Score', row=>row['R1 Score']||'-'],
+    ['R2 Method', row=>row['R2 Method']||'-'],
+    ['R2 Status', row=>row['R2 Status']||'-'],
+    ['Final', row=>row['Final Status']||'-'],
+    ['Offer', row=>row['Offers Shared']||row['Offer Accepted']||'-'],
+    ['Joined', row=>row.Joined||'-'],
+    ['File', row=>row.__file||'-'],
+  ];
+  const visibleRows=rows.slice(0,1000);
+  document.getElementById('recordsTable').innerHTML=rows.length?`<div class="records-toolbar"><div class="records-count">Showing ${formatNum(visibleRows.length)} of ${formatNum(rows.length)} records${rows.length>visibleRows.length?' (first 1,000 shown)':''}</div></div><div class="records-table-wrap"><table class="records-table"><thead><tr>${columns.map(([label])=>`<th>${escapeHtml(label)}</th>`).join('')}</tr></thead><tbody>${visibleRows.map(row=>`<tr>${columns.map(([,getter])=>`<td>${getter(row)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:'<div class="no-data">No records match the current filters.</div>';
+}
+
+/* ---- Role-specific KPI overrides ---- */
+function roleOverviewKpis(metrics) {
+  const c=metrics.counts;
+  switch(currentViewRole) {
+    case 'sourcer': return [
+      renderKpi('Total Added',formatNum(c.total),'Candidates sourced','var(--accent)'),
+      renderKpi('Sources Used',formatNum(metrics.sourceBreakdown.length),'Unique source channels','var(--accent2)'),
+      renderKpi('With Email',formatNum(countValid(metrics.rows,'Email')),pct(countValid(metrics.rows,'Email'),c.total)+' coverage','var(--accent3)'),
+      renderKpi('With Phone',formatNum(countValid(metrics.rows,'Contact Number')),pct(countValid(metrics.rows,'Contact Number'),c.total)+' coverage','var(--accent4)'),
+      renderKpi('Top Source',metrics.sourceBreakdown[0]?.label||'No data',formatNum(metrics.sourceBreakdown[0]?.count||0)+' candidates','#00d4ff'),
+      renderKpi('Roles Covered',formatNum(metrics.roleMix.length),'Job openings in view','#ff80ab'),
+    ].join('');
+    case 'recruiter': return [
+      renderKpi('Total Pipeline',formatNum(c.total),'Candidates in view','var(--accent)'),
+      renderKpi('Shortlisted (Yes)',formatNum(c.shortlisted),pct(c.shortlisted,c.total)+' shortlist rate','var(--accent2)'),
+      renderKpi('Maybe',formatNum(c.shortlistedMaybe),pct(c.shortlistedMaybe,c.total)+' under review','var(--accent4)'),
+      renderKpi('Responded',formatNum(c.responded),pct(c.responded,c.mailSent||c.total)+' response rate','var(--accent3)'),
+      renderKpi('Mail Sent',formatNum(c.mailSent),'Outreach dispatched','#ff80ab'),
+      renderKpi('Notice Period',formatNum(countValid(metrics.rows,'Notice Period')),'Candidates with NP data','#00d4ff'),
+    ].join('');
+    case 'assessment': return [
+      renderKpi('R1 Invited',formatNum(c.r1Invited),'Sent to first round','var(--accent3)'),
+      renderKpi('R1 Completed',formatNum(c.r1Completed),pct(c.r1Completed,c.r1Invited)+' attendance','var(--accent)'),
+      renderKpi('R1 Passed',formatNum(c.r1Passed),pct(c.r1Passed,metrics.primaryR1.tracked)+' pass rate','var(--success)'),
+      renderKpi('R2 Invited',formatNum(c.r2Invited),'Sent to second round','var(--accent2)'),
+      renderKpi('R2 Selected',formatNum(c.r2Selected),pct(c.r2Selected,metrics.r2Total)+' selection rate','var(--accent4)'),
+      renderKpi('Integrity Flags',formatNum(c.cheating),pct(c.cheating,c.cheatingTracked)+' of tracked','var(--danger)'),
+    ].join('');
+    case 'hiring_manager': return [
+      renderKpi('Pipeline',formatNum(c.total),'Candidates in this view','var(--accent)'),
+      renderKpi('Final Selected',formatNum(c.finalSelected),pct(c.finalSelected,c.total),'var(--accent3)'),
+      renderKpi('Offers Shared',formatNum(c.offersShared),'After final round','var(--success)'),
+      renderKpi('Offer Accepted',formatNum(c.offerAccepted),pct(c.offerAccepted,c.offersShared)+' acceptance','var(--accent2)'),
+      renderKpi('Joined',formatNum(c.joined),pct(c.joined,c.total)+' hire rate','#00d4ff'),
+      renderKpi('R1 Pass Rate',pct(c.r1Passed,metrics.primaryR1.tracked),metrics.primaryR1.label,'var(--accent4)'),
+    ].join('');
+    case 'hr': return [
+      renderKpi('Offers Shared',formatNum(c.offersShared),'Offer letters sent','var(--accent)'),
+      renderKpi('Offer Accepted',formatNum(c.offerAccepted),pct(c.offerAccepted,c.offersShared)+' acceptance','var(--success)'),
+      renderKpi('Joined',formatNum(c.joined),pct(c.joined,c.offerAccepted)+' of accepted','#00d4ff'),
+      renderKpi('Drop-offs',formatNum(c.offersShared-c.joined),'After offer to pre-join','var(--danger)'),
+      renderKpi('Hire Rate',pct(c.joined,c.total),'Of full pipeline','var(--accent3)'),
+      renderKpi('Duplicates',formatNum(c.duplicate),'Marked duplicate','var(--muted)'),
+    ].join('');
+    case 'freelancer_ops': return [
+      renderKpi('Joined',formatNum(c.joined),'Contractors onboarded','var(--accent)'),
+      renderKpi('Contract Shared',formatNum(c.contractShared),pct(c.contractShared,c.joined)+' of joined','var(--accent3)'),
+      renderKpi('Contract Signed',formatNum(c.contractSigned),pct(c.contractSigned,c.joined)+' of joined','var(--success)'),
+      renderKpi('NDA Signed',formatNum(c.ndaSigned),pct(c.ndaSigned,c.joined)+' of joined','var(--accent2)'),
+      renderKpi('Payment Initiated',formatNum(c.paymentInitiated),pct(c.paymentInitiated,c.joined)+' of joined','var(--accent4)'),
+      renderKpi('Payment Cleared',formatNum(c.paymentCleared),pct(c.paymentCleared,c.joined)+' of joined','var(--accent)'),
+    ].join('');
+    default: return [
+      renderKpi('Total Supply',formatNum(c.total),'Candidates across selected roles','var(--accent)'),
+      renderKpi('Shortlisted',formatNum(c.shortlisted),pct(c.shortlisted,c.total)+' shortlist rate','#7c6af7'),
+      renderKpi('R1 / Assessment',formatNum(metrics.primaryR1.completed||c.fabricAttended||c.videoSubmitted),metrics.primaryR1.label.replace('R1 - ',''),'var(--accent2)'),
+      renderKpi('Round Passed',formatNum(metrics.primaryR1.passed||c.videoCleared||c.fabricPass),pct(metrics.primaryR1.passed||c.videoCleared||c.fabricPass,metrics.primaryR1.tracked||c.videoSubmitted||c.fabricAttended)+' pass rate','var(--accent4)'),
+      renderKpi('Offers Shared',formatNum(c.offersShared),'After interviews','var(--success)'),
+      renderKpi('Joined',formatNum(c.joined),pct(c.joined,c.total)+' hire rate','#00d4ff'),
+    ].join('');
+  }
+}
+
+function renderDashboard(metrics,fileName,sourceTotal=metrics.counts.total) {
+  currentMetrics=metrics;
+  const c=metrics.counts;
+  const filtered=sourceTotal!==c.total;
+  applyRoleView();
+  document.getElementById('dashboardShell').classList.remove('is-empty');
+  document.getElementById('statusPill').textContent=lastConnectedUrl?'LIVE':(selectedRole?'ROLE DASHBOARD':(filtered?'FILTERED VIEW':'CSV LOADED'));
+  document.getElementById('headerTotal').textContent=filtered?`${formatNum(c.total)} of ${formatNum(sourceTotal)} matching candidates`:`${formatNum(c.total)} total candidates`;
+  document.getElementById('headerPeriod').textContent=metrics.timeline.length?`${metrics.timeline.at(-1).label} — ${metrics.timeline[0].label}`:'No timeline data';
+  document.getElementById('datasetStatus').innerHTML=`<strong>${escapeHtml(fileName)}</strong><br>${formatNum(sourceTotal)} rows · ${formatNum(new Set(allRows.map(r=>r.Role)).size||metrics.roleMix.length)} roles`;
+  document.getElementById('filterSummary').textContent=selectedRole?`Role: ${selectedRole} · ${formatNum(c.total)} shown`:(filtered?`Showing ${formatNum(c.total)} of ${formatNum(sourceTotal)}`:`Showing all ${formatNum(sourceTotal)} candidates`);
+  showError('');
+  renderWorkspaceHeader(metrics,sourceTotal);
+
+  document.getElementById('overviewKpis').innerHTML=roleOverviewKpis(metrics);
+  renderJobSidebar();
+
+  document.getElementById('conversionGrid').innerHTML=[
+    ['Shortlist Rate',pct(c.shortlisted,c.total),'Of total pipeline','var(--accent)'],
+    ['R1 Attendance',pct(metrics.primaryR1.completed,metrics.primaryR1.invited),metrics.primaryR1.label,'var(--accent3)'],
+    ['R1 Pass Rate',pct(metrics.primaryR1.passed,metrics.primaryR1.tracked),'First evaluation layer','var(--accent2)'],
+    ['R2 Selection',pct(c.r2Selected,metrics.r2Total),'Of R2 results','var(--accent4)'],
+    ['Offer Accept',pct(c.offerAccepted,c.offersShared),'Offered to Accepted','var(--success)'],
+    ['Joined Rate',pct(c.joined,c.offerAccepted),'Accepted to Joined','#00d4ff'],
+  ].map(([label,rate,from,color])=>`<div class="conv-card"><div class="conv-rate" style="color:${color};">${rate}</div><div class="conv-label">${label}</div><div class="conv-from">${from}</div></div>`).join('');
+
+  renderAnalytics(metrics,sourceTotal);
+  renderDataReadiness(metrics);
+  renderAiPanels(metrics,sourceTotal);
+  renderBarChart('sourceBreakdown',metrics.sourceBreakdown,c.total);
+  renderDonut('shiftDistribution',metrics.shifts,metrics.shifts.reduce((s,i)=>s+i.count,0));
+
+  document.getElementById('keyStats').innerHTML=[
+    ['Willing to Relocate to HYD',pct(c.relocationYes,c.relocationAnswered),`${formatNum(c.relocationYes)} of ${formatNum(c.relocationAnswered)} answered Yes`,'var(--accent)'],
+    ['Integrity Flags',pct(c.cheating,c.cheatingTracked),`${formatNum(c.cheating)} of ${formatNum(c.cheatingTracked)} flagged`,'var(--danger)'],
+    ['Duplicate Profiles',formatNum(c.duplicate),'Marked duplicate in pipeline','var(--accent4)'],
+  ].map(([title,value,sub,color])=>`<div class="card" style="text-align:center;"><div class="card-title">${title}</div><div class="metric-large" style="color:${color};">${value}</div><div class="muted-line">${sub}</div></div>`).join('');
+
+  /* Freelancer KPIs */
+  document.getElementById('flKpis').innerHTML=[
+    renderKpi('Contract Shared',formatNum(c.contractShared),pct(c.contractShared,c.joined)+' of joined','var(--accent3)'),
+    renderKpi('Contract Signed',formatNum(c.contractSigned),pct(c.contractSigned,c.joined)+' of joined','var(--success)'),
+    renderKpi('NDA Shared',formatNum(c.ndaShared),'','var(--accent4)'),
+    renderKpi('NDA Signed',formatNum(c.ndaSigned),pct(c.ndaSigned,c.joined)+' of joined','var(--accent2)'),
+    renderKpi('Payment Initiated',formatNum(c.paymentInitiated),'','#00d4ff'),
+    renderKpi('Payment Cleared',formatNum(c.paymentCleared),pct(c.paymentCleared,c.paymentInitiated)+' of initiated','var(--accent)'),
+  ].join('');
+
+  renderFunnel(metrics);
+  renderSources(metrics);
+  renderAssessments(metrics);
+  renderRole(metrics);
+  renderRecords(metrics);
+  renderSteps(metrics);
+  document.getElementById('footerLeft').textContent='Hiring Funnel Dashboard';
+  document.getElementById('footerRight').textContent=`Total: ${formatNum(c.total)} candidates · ${formatNum(c.joined)} joined`;
+  animateFunnel();
+}
+
+function renderAnalytics(metrics,sourceTotal) {
+  const c=metrics.counts;
+  const{bottleneck,strongest}=getStepInsights(metrics);
+  const topSource=metrics.sourceEfficiency[0];
+  const filteredShare=pct(c.total,sourceTotal);
+  document.getElementById('analyticsGrid').innerHTML=[
+    ['Bottleneck',bottleneck?`${bottleneck.drop.toFixed(1)}%`:'0%',bottleneck?`${bottleneck.label} loses the most candidates`:'No funnel movement yet','var(--danger)'],
+    ['Strongest Step',strongest?`${strongest.conversion.toFixed(1)}%`:'0%',strongest?`${strongest.label} is the healthiest transition`:'No transition data yet','var(--success)'],
+    ['Best Source',topSource?topSource.label:'No data',topSource?`${formatNum(topSource.joined)} joined · ${topSource.joinRate.toFixed(2)}% source-to-join`:'Upload data to compare sources','var(--accent3)'],
+    ['Current View',filteredShare,`${formatNum(c.total)} candidates in this filtered slice`,'var(--accent4)'],
+  ].map(([kicker,value,text,color])=>`<div class="insight-card" style="border-top:3px solid ${color};"><div class="insight-kicker">${escapeHtml(kicker)}</div><div class="insight-value" style="color:${color};">${escapeHtml(value)}</div><div class="insight-text">${escapeHtml(text)}</div></div>`).join('');
+  document.getElementById('sourceEfficiency').innerHTML=metrics.sourceEfficiency.length?`<table class="mini-table"><thead><tr><th>Source</th><th>Sourced</th><th>Responded</th><th>Joined</th><th>Join Rate</th></tr></thead><tbody>${metrics.sourceEfficiency.map(item=>`<tr><td class="table-strong">${escapeHtml(item.label)}</td><td>${formatNum(item.sourced)}</td><td>${pct(item.responded,item.sourced)}</td><td>${formatNum(item.joined)}</td><td>${item.joinRate.toFixed(2)}%</td></tr>`).join('')}</tbody></table>`:'<div class="no-data">No data</div>';
+  const candidates=metrics.rows.slice(0,8);
+  document.getElementById('candidateMatches').innerHTML=candidates.length?`<div class="candidate-table-wrap"><table class="mini-table"><thead><tr><th>Candidate</th><th>Role</th><th>Phone</th><th>Stage</th></tr></thead><tbody>${candidates.map(row=>`<tr><td><div class="candidate-name">${escapeHtml(row['Full Name']||'Unnamed')}</div><div class="candidate-meta">${escapeHtml(row['Soul Id']||row['Email']||'No ID')} · ${escapeHtml(row.__file||'')}</div></td><td>${escapeHtml(row.Role||'Unknown role')}</td><td>${escapeHtml(row['Contact Number']||'-')}</td><td><span class="stage-chip">${escapeHtml(latestStage(row))}</span></td></tr>`).join('')}</tbody></table></div>`:'<div class="no-data">No matching candidates</div>';
+}
+
+function renderFunnel(metrics) {
+  const c=metrics.counts;
+  const wrap=document.getElementById('funnelWrap');
+  const max=Math.max(c.total,1);
+  wrap.innerHTML=metrics.funnel.map((d,i)=>`${i?'<div class="funnel-connector"></div>':''}<div class="funnel-step" style="animation-delay:${i*0.04}s"><div class="funnel-step-label">${escapeHtml(d.label)}</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:0%;background:linear-gradient(90deg,${d.color},${d.color});color:#000;" data-width="${ratio(d.count,max).toFixed(1)}">${pct(d.count,max)}</div></div><div class="funnel-count">${formatNum(d.count)}</div><div class="funnel-pct">${pct(d.count,c.total)}</div></div>`).join('');
+  document.getElementById('stageTableBody').innerHTML=metrics.funnel.map((d,i)=>{
+    const prev=i?metrics.funnel[i-1].count:d.count;
+    const drop=i?`${pct(Math.max(prev-d.count,0),prev)} drop`:'-';
+    return`<tr><td>${escapeHtml(d.label)}</td><td>${formatNum(d.count)}</td><td>${pct(d.count,c.total)}</td><td>${drop}</td><td><span class="badge ${d.badge}">${d.status}</span></td></tr>`;
+  }).join('');
+}
+
+function animateFunnel() {
+  document.querySelectorAll('.funnel-bar').forEach(bar=>setTimeout(()=>{bar.style.width=bar.getAttribute('data-width')+'%';},80));
+}
+
+function renderSources(metrics) {
+  const c=metrics.counts;
+  document.getElementById('sourceKpis').innerHTML=(metrics.sourceBreakdown.length?metrics.sourceBreakdown:[{label:'No data',count:0}]).slice(0,6).map((item,i)=>renderKpi(item.label,formatNum(item.count),`${pct(item.count,c.total)} of pipeline`,COLORS[i%COLORS.length])).join('');
+  renderBarChart('campusBreakdown',metrics.campusBreakdown,null,{showPercent:false});
+  renderBarChart('joinedBySource',metrics.joinedBySource,Math.max(c.joined,1));
+}
+
+function renderAssessments(metrics) {
+  const c=metrics.counts;
+  const rounds=metrics.roundMetrics;
+  const primary=metrics.primaryR1;
+  document.getElementById('assessmentKpis').innerHTML=[
+    renderKpi('Detected Layers',formatNum(rounds.length),'Unified R1 plus available layers','var(--accent3)'),
+    renderKpi('Primary R1 Layer',primary.label.replace('R1 - ',''),`${formatNum(primary.tracked)} tracked`,'var(--accent2)'),
+    renderKpi('R1 Passed',formatNum(primary.passed),`${pct(primary.passed,primary.tracked)} pass rate`,'var(--accent)'),
+    renderKpi('Integrity Flags',formatNum(c.cheating),`${pct(c.cheating,c.cheatingTracked)} of tracked`,'var(--danger)'),
+  ].join('');
+  document.getElementById('roundPerformance').innerHTML=rounds.length?`<table class="mini-table"><thead><tr><th>Round</th><th>Invited</th><th>Completed</th><th>Passed</th><th>Pass Rate</th></tr></thead><tbody>${rounds.map(round=>`<tr><td class="table-strong">${escapeHtml(round.label)}</td><td>${formatNum(round.invited)}</td><td>${formatNum(round.completed)}</td><td>${formatNum(round.passed)}</td><td>${pct(round.passed,round.tracked)}</td></tr>`).join('')}</tbody></table>`:'<div class="no-data">No round columns detected</div>';
+  renderBarChart('roundOutcomeMix',rounds.map(round=>({label:round.label.replace('R1 - ','').replace('R2 - ',''),count:round.passed})),Math.max(...rounds.map(round=>round.tracked),1),{showPercent:false});
+  renderBarChart('fabricResults',[{label:'Invited',count:c.fabricInvited},{label:'Completed',count:c.fabricAttended},{label:'Passed',count:c.fabricPass},{label:'Rejected',count:c.fabricFail},{label:'Integrity Flags',count:c.cheating}],Math.max(c.fabricInvited,c.fabricAttended,c.cheatingTracked,1),{showPercent:false});
+  document.getElementById('videoSummary').textContent=`${formatNum(c.videoSubmitted)} submitted of ${formatNum(c.videoInvited)} invited`;
+  renderBarChart('videoResults',[{label:'Invited',count:c.videoInvited},{label:'Submitted',count:c.videoSubmitted},{label:'Cleared',count:c.videoCleared},{label:'Rejected',count:c.videoRejected},{label:'No-show',count:Math.max(c.videoInvited-c.videoSubmitted,0)}],Math.max(c.videoInvited,c.videoSubmitted,1),{showPercent:false});
+  document.getElementById('r1Results').innerHTML=`<div class="donut-wrap" style="justify-content:center;gap:32px;"><div style="text-align:center;"><div style="font-family:'Space Grotesk',sans-serif;font-size:42px;font-weight:800;color:var(--accent);">${formatNum(primary.passed)}</div><div class="muted-line">PASSED</div></div><div style="width:1px;background:var(--border);min-height:70px;"></div><div style="text-align:center;"><div style="font-family:'Space Grotesk',sans-serif;font-size:42px;font-weight:800;color:var(--danger);">${formatNum(primary.rejected)}</div><div class="muted-line">REJECTED</div></div></div><div style="text-align:center;margin-top:16px;" class="muted-line">${primary.label} · ${pct(primary.passed,primary.tracked)} pass rate · ${formatNum(primary.tracked)} tracked</div>`;
+  renderBarChart('r2Results',[{label:'Selected',count:c.r2Selected},{label:'Rejected',count:c.r2Rejected},{label:'Absent',count:c.r2Absent},{label:'TBD/TBS',count:c.r2Pending}],Math.max(metrics.r2Total,1));
+}
+
+function renderRole(metrics) {
+  const roleNames=metrics.roleMix.slice(0,3).map(d=>d.label).join(', ')||'No data';
+  document.getElementById('roleGrid').innerHTML=[
+    ['Active Roles',formatNum(metrics.roleMix.length),'var(--accent)'],
+    ['Top Role',metrics.roleMix[0]?.label||'No data','var(--accent2)'],
+    ['Role Spread',roleNames,'var(--accent3)'],
+    ['Top Degree',metrics.degrees[0]?.label||'No data','var(--accent4)'],
+    ['Department Focus',metrics.departments.slice(0,3).map(d=>d.label).join(', ')||'No data','#00d4ff'],
+    ['Column Map','Custom aliases active','#ff80ab'],
+  ].map(([label,val,color])=>`<div class="role-item" style="border-color:${color};"><div class="role-item-label">${label}</div><div class="role-item-val">${escapeHtml(val)}</div></div>`).join('');
+  renderRoleComparison(metrics);
+  document.getElementById('annotationPills').innerHTML=metrics.annotation.length?metrics.annotation.map((item,i)=>`<div class="pill"><div class="pill-dot" style="background:${COLORS[i%COLORS.length]}"></div>${escapeHtml(item.label)} <span class="legend-val">${formatNum(item.count)}</span></div>`).join(''):'<div class="no-data">No data</div>';
+  renderBarChart('degreeTypes',metrics.degrees,null,{showPercent:false});
+  renderBarChart('departmentTypes',metrics.departments,null,{showPercent:false});
+}
+
+function renderSteps(metrics) {
+  const c=metrics.counts;
+  const steps=[
+    ['done','1. Sourcing & Pool Building','Candidates sourced across role files, channels, campus pools, and hiring drive events.',`${formatNum(c.total)} candidates collected`],
+    ['done','2. Profile Shortlisting','Profiles reviewed for relevant background, location fit, shift fit, and role alignment.',`${formatNum(c.shortlisted)} shortlisted Yes · ${formatNum(c.shortlistedMaybe)} Maybe (${pct(c.shortlisted+c.shortlistedMaybe,c.total)})`],
+    ['done','3. Outreach - Mail Sent','Invitation emails dispatched with role details, shift information, and assessment links.',`${formatNum(c.mailSent)} mails sent`],
+    ['done','4. Candidate Response','Interested candidates respond confirming availability, shift preference, and relocation consent.',`${formatNum(c.responded)} responded (${pct(c.responded,c.mailSent)} of mailed)`],
+    ['done','5. Assessment/Test Layer','First assessment layer: Fabric AI, test, assignment, or any assessment-status columns.',`${formatNum(c.fabricInvited)} invited · ${formatNum(c.fabricAttended)} completed · ${formatNum(c.cheating)} integrity flags`],
+    ['done','6. Video/Submission Layer','Optional video, assignment, portfolio, or submission round.',`${formatNum(c.videoInvited)} invited · ${formatNum(c.videoSubmitted)} submitted · ${formatNum(c.videoCleared)} cleared`],
+    ['done','7. R1 - First Evaluation','R1 combines Fabric AI Interview, Video, explicit R1, or equivalent aliases into one candidate-level stage.',`${formatNum(metrics.primaryR1.tracked)} tracked · ${formatNum(metrics.primaryR1.passed)} passed (${pct(metrics.primaryR1.passed,metrics.primaryR1.tracked)})`],
+    ['done','8. R2 - Final Interview','Final selection round with decisions marked as selected, rejected, absent, or pending.',`${formatNum(c.r2Invited)} invited · ${formatNum(c.r2Selected)} selected · ${formatNum(c.r2Rejected)} rejected`],
+    ['done','9. Offer Roll-Out','Offer letters are shared and acceptance status is tracked.',`${formatNum(c.offersShared)} offered · ${formatNum(c.offerAccepted)} accepted (${pct(c.offerAccepted,c.offersShared)})`],
+    ['active','10. Joining & Contracts','Candidates join and freelancer documentation (Contract, NDA, Payment) is processed.',`${formatNum(c.joined)} joined · ${formatNum(c.contractSigned)} contracts signed · ${formatNum(c.ndaSigned)} NDAs signed`],
+  ];
+  document.getElementById('processTimeline').innerHTML=steps.map(([state,title,desc,stat])=>`<div class="timeline-item"><div class="timeline-dot ${state}"></div><div class="timeline-title">${title}</div><div class="timeline-desc">${desc}</div><div class="timeline-stat">${stat}</div></div>`).join('');
+  const largestDrop=metrics.funnel.slice(1).map((d,i)=>({label:`${metrics.funnel[i].label} to ${d.label}`,drop:ratio(Math.max(metrics.funnel[i].count-d.count,0),metrics.funnel[i].count)})).sort((a,b)=>b.drop-a.drop)[0];
+  document.getElementById('funnelHealth').innerHTML=[
+    ['Biggest Drop-off',`<span class="badge badge-orange">${escapeHtml(largestDrop?.label||'No data')} (${(largestDrop?.drop||0).toFixed(1)}% drop)</span>`],
+    ['Best Stage',`<span class="badge badge-green">Accept to Join (${pct(c.joined,c.offerAccepted)})</span>`],
+    ['Primary R1 No-Show',`<span class="badge badge-red">${pct(Math.max(metrics.primaryR1.invited-metrics.primaryR1.completed,0),metrics.primaryR1.invited)} of invited</span>`],
+    ['Cheating Rate',`<span class="badge badge-red">${pct(c.cheating,c.cheatingTracked)} of tracked</span>`],
+    ['R1 Pass Rate',`<span class="badge badge-green">${pct(metrics.primaryR1.passed,metrics.primaryR1.tracked)}</span>`],
+    ['R2 Selection Rate',`<span class="badge badge-yellow">${pct(c.r2Selected,metrics.r2Total)}</span>`],
+    ['Offer Acceptance',`<span class="badge badge-green">${pct(c.offerAccepted,c.offersShared)}</span>`],
+    ['Hire Rate Overall',`<span class="badge badge-purple">${pct(c.joined,c.total)} of pipeline</span>`],
+    ['Contract Signed',`<span class="badge badge-green">${pct(c.contractSigned,c.joined)} of joined</span>`],
+    ['Payment Cleared',`<span class="badge badge-green">${pct(c.paymentCleared,c.paymentInitiated)} of initiated</span>`],
+  ].map(([label,value])=>`<tr><td>${label}</td><td>${value}</td></tr>`).join('');
+  renderBarChart('timelineAdditions',metrics.timeline,c.total);
+}
+
+function showError(message) {
+  const el=document.getElementById('datasetError');
+  if (!message) { el.textContent=''; el.classList.remove('active'); return; }
+  el.textContent=message;
+  el.classList.add('active');
+}
+
+/* Apply role view on page load */
+applyRoleView();
+
+
+// ═══════════════════════════════════════════════════════════════
+// GENERALISATION OVERRIDES — replace key functions/constants
+// ═══════════════════════════════════════════════════════════════
+
+// 1. Extend EMPTY_VALUES with spreadsheet error strings
+['#n/a','#ref!','#value!','#name?','#num!','#null!','n.a.','n/a','not available'].forEach(v => EMPTY_VALUES.add(v));
+
+// 2. Extend FIELD_ALIASES with new general-purpose fields
+Object.assign(FIELD_ALIASES, {
+  'Score':               ['Score','R1_Score','R1 Score','Assessment Score','Test Score','Evaluation Score','AI Score'],
+  'Skills':              ['Skills','Primary_Skills','Key Skills','Skill Set','Core Skills','Tech Skills','Competencies'],
+  'Location':            ['Current_Location','Location','City','Current Location','Candidate Location','Based In'],
+  'Role Type Preference':['Role Type Pref','Role Preference','Role_Preference','Employment Type','Contract Type','Work Preference','Working_Status','Work Type'],
+  'Expected CTC':        ['Expected_Pay_Rate','Expected_CTC','Expected Pay Rate','Expected CTC','Expected Salary','Expected Rate','Pay Expectation'],
+  'Annotation Experience':['Annotation Experience (Yes/No)','Annotation Experience','Has Annotation Exp'],
+  'Annotation Use Case': ['Annotation use case','Annotation Use Case','Annotation Format','Annotation Type'],
+  'Years of Experience': ['Years_of_Experience','Years of Experience','Total Experience','Exp (Yrs)','Experience (Years)'],
+});
+
+// 3. Override sourceGroup to be fully generic
+function sourceGroup(pool) {
+  const p = normLower(pool);
+  if (p.includes('campus') || p.includes('college') || p.includes('university') || p.includes('institute')) return 'Campus';
+  if (p.includes('hiring drive') || p.includes('job fair') || p.includes('walk-in') || p.includes('walkin') || p.includes('drive')) return 'Hiring Events';
+  if (p.includes('linkedin') || p.includes('li ') || p.startsWith('li ') || p === 'li reachout') return 'LinkedIn';
+  if (p.includes('naukri') || p.includes('indeed') || p.includes('monster') || p.includes('shine') || p.includes('unstop') || p.includes('foundit')) return 'Job Boards';
+  if (p.includes('job posting') || p.includes('inbound') || p.includes('applied')) return 'Inbound / Job Posting';
+  if (p.includes('internal') || p.includes('database') || p.includes('pool')) return 'Internal Pool';
+  if (p.includes('referral') || p.includes('refer')) return 'Referral';
+  if (p.includes('outreach') || p.includes('reachout') || p.includes('reach out') || p.includes('headhunt') || p.includes('head hunt')) return 'Outreach / Headhunt';
+  if (p.includes('agency') || p.includes('partner') || p.includes('vendor') || p.includes('consultant')) return 'Agency / Partner';
+  if (p.includes('social') || p.includes('twitter') || p.includes('instagram') || p.includes('facebook')) return 'Social Media';
+  return normalize(pool) || 'Other';
+}
+
+// 4. Skills parsing (handles Python list format AND comma-separated)
+function parseSkillsList(value) {
+  const v = normalize(value);
+  if (!v || !hasValue(v)) return [];
+  return v.replace(/^\[|\]$/g, '').split(',')
+    .map(s => s.trim().replace(/^['"\s]+|['"\s]+$/g, '').trim())
+    .filter(s => s && hasValue(s) && s.length > 1);
+}
+
+function countSkills(rows) {
+  const map = new Map();
+  rows.forEach(row => {
+    parseSkillsList(row['Skills']).forEach(skill => {
+      const key = skill.toLowerCase();
+      if (key.length > 1 && hasValue(key)) map.set(key, (map.get(key) || 0) + 1);
+    });
+  });
+  return [...map.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
+}
+
+// 5. Location parsing (city-level)
+function parseCity(loc) {
+  if (!hasValue(loc)) return null;
+  return normalize(loc).split(',')[0].trim() || null;
+}
+
+function countLocations(rows) {
+  const map = new Map();
+  rows.forEach(row => {
+    const city = parseCity(row['Location']);
+    if (city && hasValue(city)) map.set(city, (map.get(city) || 0) + 1);
+  });
+  return [...map.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
+}
+
+// 6. Experience bucketing
+function bucketExperience(years) {
+  const y = parseFloat(years);
+  if (isNaN(y)) return null;
+  if (y < 1) return '< 1 yr';
+  if (y < 3) return '1–2 yrs';
+  if (y < 5) return '3–4 yrs';
+  if (y < 8) return '5–7 yrs';
+  if (y < 12) return '8–11 yrs';
+  return '12+ yrs';
+}
+const EXP_ORDER = ['< 1 yr','1–2 yrs','3–4 yrs','5–7 yrs','8–11 yrs','12+ yrs'];
+
+function countExperience(rows) {
+  const map = new Map();
+  rows.forEach(row => {
+    const b = bucketExperience(row['Years of Experience']);
+    if (b) map.set(b, (map.get(b) || 0) + 1);
+  });
+  return EXP_ORDER.filter(k => map.has(k)).map(label => ({ label, count: map.get(label) }));
+}
+
+// 7. Pay rate bucketing (handles both ₹ LPA and $/hr formats)
+function bucketPayRate(value) {
+  const n = parseFloat(value);
+  if (isNaN(n) || n <= 0) return null;
+  if (n <= 5)  return '≤ 5';
+  if (n <= 10) return '6–10';
+  if (n <= 15) return '11–15';
+  if (n <= 20) return '16–20';
+  if (n <= 30) return '21–30';
+  if (n <= 50) return '31–50';
+  return '50+';
+}
+const PAY_ORDER = ['≤ 5','6–10','11–15','16–20','21–30','31–50','50+'];
+
+function countPayRates(rows) {
+  const map = new Map();
+  rows.forEach(row => {
+    const b = bucketPayRate(row['Expected CTC']);
+    if (b) map.set(b, (map.get(b) || 0) + 1);
+  });
+  return PAY_ORDER.filter(k => map.has(k)).map(label => ({ label, count: map.get(label) }));
+}
+
+// 8. Employment type preference — split multi-value like "Freelance, Contract, Full-time"
+function countEmploymentTypes(rows) {
+  const map = new Map();
+  rows.forEach(row => {
+    const v = normalize(row['Role Type Preference']);
+    if (!hasValue(v)) return;
+    v.split(',').map(s => s.trim()).filter(hasValue).forEach(t => {
+      map.set(t, (map.get(t) || 0) + 1);
+    });
+  });
+  return [...map.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
+}
+
+// 9. Score stats
+function computeScoreStats(rows) {
+  const scores = rows.map(r => parseFloat(r['Score'])).filter(n => !isNaN(n) && n > 0);
+  if (!scores.length) return null;
+  const avg = scores.reduce((s, n) => s + n, 0) / scores.length;
+  const min = Math.min(...scores); const max = Math.max(...scores);
+  // bucket into deciles
+  const buckets = ['0–0.1','0.1–0.2','0.2–0.3','0.3–0.4','0.4–0.5','0.5–0.6','0.6–0.7','0.7–0.8','0.8–0.9','0.9–1.0'];
+  const bmap = new Map(buckets.map(b => [b, 0]));
+  scores.forEach(s => {
+    const idx = Math.min(Math.floor(s * 10), 9);
+    const key = buckets[idx];
+    bmap.set(key, (bmap.get(key) || 0) + 1);
+  });
+  const distribution = [...bmap.entries()].filter(([,v]) => v > 0).map(([label, count]) => ({ label, count }));
+  return { avg, min, max, count: scores.length, distribution };
+}
+
+// 10. Build adaptive funnel — only include stages with data
+function buildAdaptiveFunnel(counts, rows) {
+  const shortlistTracked = countValid(rows, 'Shortlisted') > 0;
+  const all = [
+    { label:'Total Sourced',   count:counts.total,         badge:'badge-purple', always:true },
+    { label:'Mail Sent',       count:counts.mailSent,      badge:'badge-yellow', showIf:counts.mailSent > 0 },
+    { label:'Responded',       count:counts.responded,     badge:'badge-orange', showIf:counts.responded > 0 },
+    { label:'Shortlisted',     count:counts.shortlisted,   badge:'badge-orange', showIf:shortlistTracked },
+    { label:'R1 Invited',      count:counts.r1Invited,     badge:'badge-purple', showIf:counts.r1Invited > 0 },
+    { label:'R1 Completed',    count:counts.r1Completed,   badge:'badge-orange', showIf:counts.r1Completed > 0 },
+    { label:'R1 Passed',       count:counts.r1Passed,      badge:'badge-green',  showIf:counts.r1Passed > 0 || counts.r1Rejected > 0 },
+    { label:'R2 Invited',      count:counts.r2Invited,     badge:'badge-purple', showIf:counts.r2Invited > 0 },
+    { label:'Final Selected',  count:counts.finalSelected, badge:'badge-green',  showIf:counts.finalSelected > 0 || counts.finalRejected > 0 },
+    { label:'Offers Shared',   count:counts.offersShared,  badge:'badge-green',  showIf:counts.offersShared > 0 },
+    { label:'Offer Accepted',  count:counts.offerAccepted, badge:'badge-green',  showIf:counts.offerAccepted > 0 },
+    { label:'Joined',          count:counts.joined,        badge:'badge-green',  showIf:counts.joined > 0 },
+  ];
+  return all.filter(s => s.always || s.showIf).map((s, i) => ({ ...s, status: s.badge.replace('badge-','').toUpperCase(), color: COLORS[i % COLORS.length] }));
+}
+
+// 11. Extend computeDashboardMetrics to add new fields
+const _origComputeMetrics = computeDashboardMetrics;
+computeDashboardMetrics = function(rows) {
+  const metrics = _origComputeMetrics(rows);
+
+  // Adaptive funnel (overwrites the hardcoded one)
+  metrics.funnel = buildAdaptiveFunnel(metrics.counts, rows);
+
+  // New profile metrics
+  metrics.topSkills       = topN(countSkills(rows), 12);
+  metrics.locationData    = topN(countLocations(rows), 12);
+  metrics.expDistribution = countExperience(rows);
+  metrics.payRateData     = countPayRates(rows);
+  metrics.employmentTypes = topN(countEmploymentTypes(rows), 8);
+  metrics.scoreStats      = computeScoreStats(rows);
+
+  // Avg experience
+  const expVals = rows.map(r => parseFloat(r['Years of Experience'])).filter(n => !isNaN(n) && n >= 0);
+  metrics.avgExp = expVals.length ? (expVals.reduce((s,n)=>s+n,0)/expVals.length) : null;
+
+  // Pay rate range
+  const payVals = rows.map(r => parseFloat(r['Expected CTC'])).filter(n => !isNaN(n) && n > 0);
+  metrics.payRange = payVals.length ? { min: Math.min(...payVals), max: Math.max(...payVals), avg: payVals.reduce((s,n)=>s+n,0)/payVals.length } : null;
+
+  // Annotation experience flag
+  metrics.hasAnnotationExp = countWhere(rows, 'Annotation Experience', v => normLower(v) === 'yes');
+  metrics.annotationUseCases = topN(countBy(rows, 'Annotation Use Case'), 8);
+
+  // Dynamic boolean columns (any Yes/No column not already tracked)
+  const knownCols = new Set(['Shortlisted','Responded','Fabric Invited','Fabric Attended','Video Invited','Video Submitted','Assessment Cleared','Duplicate','Annotation Experience']);
+  metrics.dynamicBoolCols = Object.keys(rows[0] || {}).filter(col => {
+    if (knownCols.has(col)) return false;
+    const vals = rows.map(r => normLower(r[col]));
+    const yesCount = vals.filter(v => v === 'yes').length;
+    const noCount = vals.filter(v => v === 'no').length;
+    return (yesCount + noCount) > rows.length * 0.1; // at least 10% have yes/no
+  });
+
+  return metrics;
+};
+
+// 12. Render Insights tab
+function renderInsights(metrics) {
+  const { rows } = metrics;
+
+  // Skills
+  const skillsEl = document.getElementById('skillsCard');
+  if (metrics.topSkills.length) {
+    renderBarChart('skillsChart', metrics.topSkills.slice(0, 12), null, { showPercent: false });
+  } else { document.getElementById('skillsChart').innerHTML = '<div class="no-data">No skills data detected</div>'; }
+
+  // Location
+  if (metrics.locationData.length) {
+    renderBarChart('locationChart', metrics.locationData.slice(0, 10), null, { showPercent: false });
+  } else { document.getElementById('locationChart').innerHTML = '<div class="no-data">No location data detected</div>'; }
+
+  // Experience
+  if (metrics.expDistribution.length) {
+    renderBarChart('expChart', metrics.expDistribution, null, { showPercent: false });
+    if (metrics.avgExp !== null) {
+      document.getElementById('expChart').insertAdjacentHTML('afterend',
+        `<div class="muted-line" style="margin-top:10px;">Average experience: <strong>${metrics.avgExp.toFixed(1)} yrs</strong></div>`);
+    }
+  } else { document.getElementById('expChart').innerHTML = '<div class="no-data">No experience data detected</div>'; }
+
+  // Pay Rate
+  if (metrics.payRateData.length) {
+    renderBarChart('payChart', metrics.payRateData, null, { showPercent: false });
+    if (metrics.payRange) {
+      document.getElementById('payChart').insertAdjacentHTML('afterend',
+        `<div class="muted-line" style="margin-top:10px;">Range: <strong>${metrics.payRange.min}–${metrics.payRange.max}</strong> · Avg: <strong>${metrics.payRange.avg.toFixed(1)}</strong></div>`);
+    }
+  } else { document.getElementById('payChart').innerHTML = '<div class="no-data">No pay rate data detected</div>'; }
+
+  // Employment type
+  if (metrics.employmentTypes.length) {
+    renderDonut('empTypeChart', metrics.employmentTypes, rows.length);
+  } else { document.getElementById('empTypeChart').innerHTML = '<div class="no-data">No employment type data detected</div>'; }
+
+  // Score distribution
+  if (metrics.scoreStats) {
+    renderBarChart('scoreChart', metrics.scoreStats.distribution, null, { showPercent: false });
+    document.getElementById('scoreChart').insertAdjacentHTML('afterend',
+      `<div class="muted-line" style="margin-top:10px;">Avg: <strong>${metrics.scoreStats.avg.toFixed(3)}</strong> · Min: ${metrics.scoreStats.min.toFixed(2)} · Max: ${metrics.scoreStats.max.toFixed(2)} · ${metrics.scoreStats.count} scored</div>`);
+  } else { document.getElementById('scoreChart').innerHTML = '<div class="no-data">No score data detected</div>'; }
+
+  // Extra role-specific cols (annotation use cases etc.)
+  const extras = [];
+  if (metrics.annotationUseCases.length > 0) {
+    extras.push({ title: 'Annotation Use Cases', items: metrics.annotationUseCases });
+  }
+  if (extras.length) {
+    document.getElementById('extraColsTitle').style.display = '';
+    document.getElementById('extraColsGrid').style.display = '';
+    document.getElementById('extraColsGrid').innerHTML = extras.map((e, ei) => {
+      const id = `extraCol${ei}`;
+      return `<div class="card"><div class="card-title">${escapeHtml(e.title)}</div><div class="bar-chart" id="${id}"></div></div>`;
+    }).join('');
+    extras.forEach((e, ei) => renderBarChart(`extraCol${ei}`, e.items, null, { showPercent: false }));
+  }
+}
+
+// 13. Override renderDashboard to call renderInsights and use dynamic key stats
+const _origRenderDashboard = renderDashboard;
+renderDashboard = function(metrics, fileName, sourceTotal) {
+  _origRenderDashboard(metrics, fileName, sourceTotal);
+  renderInsights(metrics);
+
+  // Dynamic key stats (replace hardcoded 3-card section)
+  const c = metrics.counts;
+  const dynamicStats = [];
+  if (c.relocationAnswered > 0) dynamicStats.push(['Willing to Relocate', pct(c.relocationYes, c.relocationAnswered), `${formatNum(c.relocationYes)} of ${formatNum(c.relocationAnswered)} answered Yes`, 'var(--accent)']);
+  if (c.cheatingTracked > 0) dynamicStats.push(['Integrity Flags', pct(c.cheating, c.cheatingTracked), `${formatNum(c.cheating)} of ${formatNum(c.cheatingTracked)} flagged`, 'var(--danger)']);
+  if (c.duplicate > 0) dynamicStats.push(['Duplicate Profiles', formatNum(c.duplicate), 'Marked duplicate in pipeline', 'var(--accent4)']);
+  if (metrics.scoreStats) dynamicStats.push(['Avg Score', metrics.scoreStats.avg.toFixed(3), `${metrics.scoreStats.count} candidates evaluated`, 'var(--accent3)']);
+  if (metrics.avgExp !== null) dynamicStats.push(['Avg Experience', `${metrics.avgExp.toFixed(1)} yrs`, `Across ${formatNum(metrics.expDistribution.reduce((s,i)=>s+i.count,0))} tracked candidates`, '#00d4ff']);
+  if (metrics.payRange) dynamicStats.push(['Pay Range', `${metrics.payRange.min}–${metrics.payRange.max}`, `Avg: ${metrics.payRange.avg.toFixed(1)} · ${formatNum(metrics.payRateData.reduce((s,i)=>s+i.count,0))} stated`, '#ff80ab']);
+
+  const ksEl = document.getElementById('keyStats');
+  if (ksEl) {
+    if (dynamicStats.length) {
+      ksEl.innerHTML = dynamicStats.slice(0, 6).map(([title, value, sub, color]) =>
+        `<div class="card" style="text-align:center;"><div class="card-title">${title}</div><div class="metric-large" style="color:${color};">${value}</div><div class="muted-line">${sub}</div></div>`
+      ).join('');
+    } else {
+      ksEl.innerHTML = '';
+    }
+  }
+};
+
+// 14. Override renderSteps to be fully generic
+function renderSteps(metrics) {
+  const c = metrics.counts;
+  const primary = metrics.primaryR1;
+  const stepsAll = [
+    ['done','Sourcing & Pool Building','Candidates sourced across all uploaded role files and channels.',`${formatNum(c.total)} candidates collected`],
+    c.shortlisted > 0 ? ['done','Profile Shortlisting','Profiles reviewed for role alignment, skills, and availability.',`${formatNum(c.shortlisted)} shortlisted${c.shortlistedMaybe ? ' · ' + formatNum(c.shortlistedMaybe) + ' maybe' : ''} (${pct(c.shortlisted + c.shortlistedMaybe, c.total)})`] : null,
+    c.mailSent > 0 ? ['done','Outreach','Candidates reached out to with role details.',`${formatNum(c.mailSent)} mails sent`] : null,
+    c.responded > 0 ? ['done','Candidate Response','Interested candidates confirmed availability.',`${formatNum(c.responded)} responded (${pct(c.responded, c.mailSent || c.total)})`] : null,
+    c.fabricInvited > 0 ? ['done','Assessment / Test Layer',`${primary.label} — first evaluation layer.`,`${formatNum(c.fabricInvited)} invited · ${formatNum(c.fabricAttended)} completed`] : null,
+    c.videoInvited > 0 ? ['done','Video / Submission Layer','Optional video or assignment round.',`${formatNum(c.videoInvited)} invited · ${formatNum(c.videoSubmitted)} submitted`] : null,
+    (primary.invited > 0 || primary.tracked > 0) ? ['done','R1 — First Evaluation',`${primary.label}: first formal evaluation stage.`,`${formatNum(primary.tracked)} tracked · ${formatNum(primary.passed)} passed (${pct(primary.passed, primary.tracked)})`] : null,
+    c.r2Invited > 0 ? ['done','R2 — Final Evaluation','Final round: panel, technical, or HR interview.',`${formatNum(c.r2Invited)} invited · ${formatNum(c.r2Selected)} selected`] : null,
+    c.finalSelected > 0 ? ['done','Final Decision',`${formatNum(c.finalSelected)} selected · ${formatNum(c.finalRejected)} rejected.`,'Decisions recorded'] : null,
+    c.offersShared > 0 ? ['done','Offer Roll-Out',`Offer letters shared and acceptance tracked.`,`${formatNum(c.offersShared)} offered · ${formatNum(c.offerAccepted)} accepted (${pct(c.offerAccepted, c.offersShared)})`] : null,
+    c.joined > 0 ? ['active','Joining & Onboarding','Candidates join and documentation is processed.',`${formatNum(c.joined)} joined · ${formatNum(c.contractSigned)} contracts signed`] : null,
+  ].filter(Boolean);
+
+  const tl = document.getElementById('processTimeline');
+  if (tl) tl.innerHTML = stepsAll.map(([state,title,desc,stat]) =>
+    `<div class="timeline-item"><div class="timeline-dot ${state}"></div><div class="timeline-title">${title}</div><div class="timeline-desc">${desc}</div><div class="timeline-stat">${stat}</div></div>`
+  ).join('');
+
+  const largestDrop = metrics.funnel.slice(1).map((d,i) => ({ label:`${metrics.funnel[i].label} → ${d.label}`, drop:ratio(Math.max(metrics.funnel[i].count - d.count, 0), metrics.funnel[i].count) })).sort((a,b) => b.drop - a.drop)[0];
+
+  const fhEl = document.getElementById('funnelHealth');
+  if (fhEl) {
+    const rows2 = [
+      ['Biggest Drop-off',`<span class="badge badge-orange">${escapeHtml(largestDrop?.label||'No data')} (${(largestDrop?.drop||0).toFixed(1)}% drop)</span>`],
+      c.offersShared > 0 ? ['Offer Acceptance',`<span class="badge badge-green">${pct(c.offerAccepted, c.offersShared)}</span>`] : null,
+      primary.tracked > 0 ? ['R1 Pass Rate',`<span class="badge badge-green">${pct(primary.passed, primary.tracked)}</span>`] : null,
+      metrics.r2Total > 0 ? ['R2 Selection Rate',`<span class="badge badge-yellow">${pct(c.r2Selected, metrics.r2Total)}</span>`] : null,
+      c.cheatingTracked > 0 ? ['Integrity Flags',`<span class="badge badge-red">${pct(c.cheating, c.cheatingTracked)} of tracked</span>`] : null,
+      ['Hire Rate Overall',`<span class="badge badge-purple">${pct(c.joined || c.finalSelected, c.total)} of pipeline</span>`],
+      c.contractSigned > 0 ? ['Contract Signed',`<span class="badge badge-green">${pct(c.contractSigned, c.joined)} of joined</span>`] : null,
+    ].filter(Boolean);
+    fhEl.innerHTML = rows2.map(([l,v]) => `<tr><td>${l}</td><td>${v}</td></tr>`).join('');
+  }
+
+  const taEl = document.getElementById('timelineAdditions');
+  if (taEl) renderBarChart('timelineAdditions', metrics.timeline, c.total);
+}
+
+// 15. Override buildAiBrief to be generic
+function buildAiBrief(metrics, sourceTotal) {
+  const c = metrics.counts;
+  const { bottleneck, strongest } = getStepInsights(metrics);
+  const topSource = metrics.sourceEfficiency[0];
+  const primary = metrics.primaryR1;
+  const hireMetric = c.joined > 0 ? c.joined : c.finalSelected;
+  const hireLabel = c.joined > 0 ? 'joined' : 'final-selected';
+  return {
+    headline: selectedRole
+      ? `${selectedRole}: ${formatNum(c.total)} candidates, ${formatNum(hireMetric)} ${hireLabel}`
+      : `${formatNum(metrics.roleMix.length || 1)} role${metrics.roleMix.length > 1 ? 's' : ''}, ${formatNum(c.total)} candidates in view`,
+    health: c.offersShared > 0
+      ? `Offer rate is ${pct(c.offersShared, c.total)} with ${formatNum(c.offerAccepted)} acceptances.`
+      : `${formatNum(hireMetric)} candidates reached final stage (${pct(hireMetric, c.total)} of pipeline).`,
+    bottleneck: bottleneck ? `${bottleneck.label} is the largest drop at ${bottleneck.drop.toFixed(1)}%.` : 'No bottleneck detected yet.',
+    source: topSource ? `${topSource.label} is currently the strongest source (${formatNum(topSource.sourced)} sourced).` : 'No source performance data detected.',
+    rounds: primary.tracked > 0 ? `${primary.label} has a ${pct(primary.passed, primary.tracked)} pass rate across ${formatNum(primary.tracked)} tracked candidates.` : 'No evaluation round data detected yet.',
+    actions: [
+      bottleneck ? `Address the ${bottleneck.label.toLowerCase()} drop before scaling top-of-funnel.` : 'Load evaluation data to identify the main constraint.',
+      topSource ? `${topSource.label} is the strongest source — verify quality further down the funnel.` : 'Normalise source columns to compare channel quality.',
+      metrics.dataQuality.score < 75 ? `Improve low-coverage fields: ${metrics.dataQuality.missing.join(', ') || 'stage data'}.` : 'Data coverage looks strong for operating decisions.',
+      metrics.scoreStats ? `Average assessment score is ${metrics.scoreStats.avg.toFixed(2)} — consider thresholding candidates below ${(metrics.scoreStats.avg * 0.8).toFixed(2)}.` : 'Add a Score column to enable score-based filtering.',
+    ],
+  };
+}
+
+// 16. Update ROLE_CONFIG to include 'insights' in relevant tabs
+ROLE_CONFIG.all.tabs.push('insights');
+ROLE_CONFIG.recruiter.tabs.push('insights');
+ROLE_CONFIG.sourcer.tabs.push('insights');
+ROLE_CONFIG.assessment.tabs.push('insights');
+ROLE_CONFIG.hiring_manager.tabs.push('insights');
+
+// 17. Add 'insights' button to applyRoleView awareness (already handled since it reads data-tab)
+
+// 18. Update data readiness to handle Score col
+const _origBuildDataQuality = buildDataQuality;
+buildDataQuality = function(rows) {
+  const result = _origBuildDataQuality(rows);
+  // Add email check if not already there
+  const total = rows.length || 1;
+  if (!result.checks.find(c => c.label === 'Email')) {
+    result.checks.push({ label: 'Email', value: ratio(countValid(rows, 'Email'), total) });
+  }
+  return result;
+};
+
+</script>
+
+</body>
+</html>
