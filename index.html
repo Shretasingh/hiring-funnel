@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hiring Funnel Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>0-10 Everything</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f5f7fb;
@@ -954,7 +956,7 @@
   <header>
     <div class="header-inner">
       <div>
-        <div class="header-tag">Universal Hiring Intelligence</div>
+        <div class="header-tag">Growth Tracker in HTML</div>
         <h1>Hiring<br><span>Funnel</span></h1>
       </div>
       <div class="header-meta">
@@ -1036,7 +1038,7 @@
   <div class="workspace-titlebar">
     <div>
       <div class="workspace-title" id="workspaceTitle">All Hiring Roles</div>
-      <div class="workspace-subtitle" id="workspaceSubtitle">Combined supply command center across uploaded job openings.</div>
+      <div class="workspace-subtitle" id="workspaceSubtitle">Overview across all active job openings.</div>
     </div>
     <div class="workspace-right">
       <div class="view-chip" id="workspaceChip">All roles</div>
@@ -1104,7 +1106,7 @@
     <div class="analytics-layout">
       <div class="card"><div class="card-title">Source Efficiency</div><div id="sourceEfficiency"></div></div>
       <div class="card"><div class="card-title">Data Readiness</div><div id="dataReadiness"></div></div>
-      <div class="card"><div class="card-title">AI Summary Preview</div><div id="aiSummaryPreview"></div></div>
+      <div class="card"><div class="card-title">Pipeline Brief</div><div id="aiSummaryPreview"></div></div>
     </div>
     <div class="grid-2">
       <div class="card"><div class="card-title">Supply Sources Breakdown</div><div class="bar-chart" id="sourceBreakdown"></div></div>
@@ -1124,17 +1126,17 @@
   </div>
 
   <div class="panel" id="panel-sources">
-    <div class="section-title">Supply Source Analysis</div>
+    <div class="section-title">Source Breakdown</div>
     <div class="kpi-row" id="sourceKpis"></div>
     <div class="section-title" id="campusTitle">Campus Pools Breakdown</div>
     <div class="card" id="campusCard" style="margin-bottom:32px;"><div class="card-title">College-wise candidate count</div><div class="bar-chart" id="campusBreakdown"></div></div>
-    <div class="section-title">Source Quality — Who Actually Joined</div>
+    <div class="section-title">Source-to-Hire Quality</div>
     <div class="card"><div class="card-title">Joining numbers by source</div><div class="bar-chart" id="joinedBySource"></div></div>
     <div id="sourcesEmptyState" class="empty-state" style="display:none; margin-top:18px;">No source data available for this view.</div>
   </div>
 
   <div class="panel" id="panel-assessments">
-    <div class="section-title">Round & Assessment Performance</div>
+    <div class="section-title">Round Performance</div>
     <div class="kpi-row" id="assessmentKpis" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));"></div>
     <div class="analytics-layout">
       <div class="card"><div class="card-title">Unified R1 & Round Layers</div><div id="roundPerformance"></div></div>
@@ -1168,9 +1170,9 @@
   </div>
 
   <div class="panel" id="panel-candidates">
-    <div class="section-title">Candidate Search Across Job Openings</div>
+    <div class="section-title">Candidate Lookup</div>
     <div class="candidate-panel">
-      <div class="card"><div class="card-title">Matching Candidates & Current Stage</div><div id="candidateMatches"></div></div>
+      <div class="card"><div class="card-title">Candidate Pipeline</div><div id="candidateMatches"></div></div>
     </div>
   </div>
 
@@ -1202,7 +1204,7 @@
       <div class="section-title">Annotation Experience Types</div>
       <div class="card" style="margin-bottom:32px;"><div class="card-title">Formats candidates reported experience in</div><div class="pill-wrap" id="annotationPills"></div></div>
     </div>
-    <div class="section-title">Candidate Academic Background</div>
+    <div class="section-title">Candidate Background Profile</div>
     <div class="grid-2">
       <div class="card"><div class="card-title">Degree Types</div><div class="bar-chart" id="degreeTypes"></div></div>
       <div class="card"><div class="card-title">Top Departments</div><div class="bar-chart" id="departmentTypes"></div></div>
@@ -1986,8 +1988,9 @@ function renderWorkspaceHeader(metrics,sourceTotal) {
   const cfg=ROLE_CONFIG[currentViewRole]||ROLE_CONFIG.all;
   const title=selectedRole||'All Hiring Roles';
   document.getElementById('workspaceTitle').textContent=title;
-  document.getElementById('workspaceSubtitle').textContent=selectedRole?'Dedicated supply dashboard for this job opening.':'Combined supply command center across uploaded job openings.';
-  document.getElementById('workspaceChip').textContent=selectedRole?'Single job view':`${formatNum(roleStats(allRows).length)} jobs loaded`;
+  document.getElementById('workspaceSubtitle').textContent=selectedRole?'Dedicated dashboard for this job opening.':'Overview across all active job openings.';
+  const _jobCount=roleStats(allRows).length;
+  document.getElementById('workspaceChip').textContent=selectedRole?'Single job view':`${formatNum(_jobCount)} ${_jobCount===1?'job':'jobs'} loaded`;
   document.getElementById('workspaceChip').style.color=cfg.color;
   document.getElementById('opsStrip').innerHTML=[
     ['Candidates',formatNum(c.total)],
@@ -2205,7 +2208,7 @@ function renderAnalytics(metrics,sourceTotal) {
     ['Bottleneck',bottleneck?`${bottleneck.drop.toFixed(1)}%`:'0%',bottleneck?`${bottleneck.label} loses the most candidates`:'No funnel movement yet','var(--danger)'],
     ['Strongest Step',strongest?`${strongest.conversion.toFixed(1)}%`:'0%',strongest?`${strongest.label} is the healthiest transition`:'No transition data yet','var(--success)'],
     ['Best Source',topSource?topSource.label:'No data',topSource?`${formatNum(topSource.joined)} joined · ${topSource.joinRate.toFixed(2)}% source-to-join`:'Upload data to compare sources','var(--accent3)'],
-    ['Current View',filteredShare,`${formatNum(c.total)} candidates in this filtered slice`,'var(--accent4)'],
+    ['Active Filter',filteredShare,filtered?`Showing ${formatNum(c.total)} of ${formatNum(sourceTotal)} candidates`:`Showing all ${formatNum(c.total)} candidates`,'var(--accent4)'],
   ].map(([kicker,value,text,color])=>`<div class="insight-card" style="border-top:3px solid ${color};"><div class="insight-kicker">${escapeHtml(kicker)}</div><div class="insight-value" style="color:${color};">${escapeHtml(value)}</div><div class="insight-text">${escapeHtml(text)}</div></div>`).join('');
   document.getElementById('sourceEfficiency').innerHTML=metrics.sourceEfficiency.length?`<table class="mini-table"><thead><tr><th>Source</th><th>Sourced</th><th>Responded</th><th>Joined</th><th>Join Rate</th></tr></thead><tbody>${metrics.sourceEfficiency.map(item=>`<tr><td class="table-strong">${escapeHtml(item.label)}</td><td>${formatNum(item.sourced)}</td><td>${pct(item.responded,item.sourced)}</td><td>${formatNum(item.joined)}</td><td>${item.joinRate.toFixed(2)}%</td></tr>`).join('')}</tbody></table>`:'<div class="no-data">No data</div>';
   const candidates=metrics.rows.slice(0,8);
@@ -3158,7 +3161,11 @@ function renderAiPanels(metrics, sourceTotal) {
   const brief = buildAiBrief(metrics, sourceTotal);
   const previewEl = document.getElementById('aiSummaryPreview');
   if (previewEl) {
-    previewEl.innerHTML = `<div class="ai-note"><div class="ai-note-title">${escapeHtml(brief.headline)}</div><div class="ai-note-body">${escapeHtml(brief.health)}</div></div>`;
+    const roleCount = metrics.roleMix.length || 1;
+    const snapshot = selectedRole
+      ? `Campaign Snapshot · ${selectedRole}`
+      : `Campaign Snapshot · ${formatNum(roleCount)} ${roleCount === 1 ? 'Role' : 'Roles'}`;
+    previewEl.innerHTML = `<div class="ai-note"><div class="ai-note-title">${escapeHtml(snapshot)}</div><div class="ai-note-body"><strong>${escapeHtml(brief.headline)}</strong><br>${escapeHtml(brief.health)}</div></div>`;
   }
   const briefEl = document.getElementById('aiBrief');
   if (!briefEl) return;
@@ -3802,17 +3809,445 @@ ROLE_CONFIG.freelancer_ops.tabs = ['overview', 'candidates', 'records', 'insight
 })();
 applyRoleView();
 
+// ═══════════════════════════════════════════════════════════════
+// EXCEPTIONAL POLISH — typography, color system, premium cards,
+// pulsing live badge, polished tabs, sidebar, scrollbars
+// ═══════════════════════════════════════════════════════════════
+(function injectPolishCss() {
+  const css = `
+    /* [2A] Typography — Inter for body, DM Serif Display for hero */
+    body, html, button, input, select, textarea {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    h1, .workspace-title { font-family: 'DM Serif Display', serif; font-weight: 400; letter-spacing: -0.01em; }
+    .funnel-count, .funnel-pct, .kpi-value, .metric-large, .conv-rate {
+      font-family: 'Inter', sans-serif !important;
+    }
+
+    /* [2B] Color system — extend root with the design palette */
+    :root {
+      --color-primary: #0f4c3a;
+      --color-primary-light: #1a6652;
+      --color-accent: #00c896;
+      --color-accent-soft: #e6faf4;
+      --color-danger: #ef4444;
+      --color-danger-soft: #fef2f2;
+      --color-warning: #f59e0b;
+      --color-warning-soft: #fffbeb;
+      --color-success: #10b981;
+      --color-success-soft: #f0fdf4;
+      --color-neutral-50: #f9fafb;
+      --color-neutral-100: #f3f4f6;
+      --color-neutral-200: #e5e7eb;
+      --color-neutral-500: #6b7280;
+      --color-neutral-700: #374151;
+      --color-neutral-900: #111827;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+      --radius-card: 12px;
+      --radius-pill: 999px;
+      /* Remap existing brand variables so the rest of the dashboard inherits the palette */
+      --accent: #0f4c3a;
+      --success: #10b981;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --surface: #ffffff;
+      --surface2: #f9fafb;
+    }
+
+    /* [2C] KPI cards — elevated */
+    .kpi-card {
+      border-radius: var(--radius-card) !important;
+      box-shadow: var(--shadow-card) !important;
+      border: 1px solid var(--color-neutral-100) !important;
+      background: #fff !important;
+      transition: box-shadow 0.2s ease, transform 0.15s ease;
+    }
+    .kpi-card:hover {
+      box-shadow: var(--shadow-card-hover) !important;
+      transform: translateY(-1px);
+      border-color: var(--color-neutral-200) !important;
+    }
+    .kpi-value {
+      font-weight: 800 !important;
+      letter-spacing: -0.03em !important;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-neutral-900) !important;
+    }
+    .kpi-label {
+      font-size: 0.65rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.09em !important;
+      text-transform: uppercase;
+      color: var(--color-neutral-500) !important;
+    }
+    .kpi-sub { color: var(--color-neutral-500) !important; font-size: 0.72rem !important; }
+
+    /* [2D] Section headings */
+    .section-title {
+      font-size: 1rem !important;
+      font-weight: 700 !important;
+      color: var(--color-neutral-900) !important;
+      letter-spacing: -0.01em !important;
+      margin-bottom: 14px !important;
+    }
+    .card-title {
+      font-size: 0.78rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.04em !important;
+      color: var(--color-neutral-700) !important;
+    }
+
+    /* [2E] Background — clean, no grid */
+    body {
+      background: #f7f8fc !important;
+    }
+    body::before { display: none !important; }
+
+    /* [2F] Polished scrollbars globally */
+    * { scrollbar-width: thin; scrollbar-color: #d1d5db transparent; }
+    *::-webkit-scrollbar { width: 6px; height: 6px; }
+    *::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; }
+    *::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    *::-webkit-scrollbar-track { background: transparent; }
+
+    /* [3A] LIVE badge — pulse */
+    .status-pill {
+      display: inline-flex !important;
+      align-items: center;
+      gap: 6px;
+      background: #dcfce7 !important;
+      color: #15803d !important;
+      border: 1px solid #86efac !important;
+      padding: 3px 10px !important;
+      border-radius: var(--radius-pill) !important;
+      font-size: 0.68rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.08em !important;
+    }
+    .status-pill::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #15803d;
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    /* [3B] Header card — gradient top border */
+    header {
+      border-top: 3px solid var(--color-accent) !important;
+      border-radius: var(--radius-card) !important;
+      background: #fff !important;
+      box-shadow: var(--shadow-card) !important;
+    }
+
+    /* [3C] Date range — monospace */
+    #headerPeriod {
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 0.78rem !important;
+      color: var(--color-neutral-500) !important;
+      letter-spacing: 0.02em !important;
+    }
+
+    /* [3D] Connect button CTA */
+    .connect-btn, #connectBtn {
+      background: var(--color-primary) !important;
+      color: #fff !important;
+      border: none !important;
+      border-radius: 8px !important;
+      padding: 9px 20px !important;
+      font-size: 0.78rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.06em !important;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .connect-btn:hover, #connectBtn:hover {
+      background: var(--color-primary-light) !important;
+      transform: scale(1.02);
+    }
+
+    /* [3E] Source switcher tabs */
+    .connect-tabs-row .tab-btn,
+    .source-tab-btn {
+      border-radius: 6px !important;
+      font-size: 0.72rem !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.05em !important;
+    }
+
+    /* [4A] Sidebar card */
+    .job-sidebar, .sidebar-panel {
+      border-radius: var(--radius-card) !important;
+      box-shadow: var(--shadow-card) !important;
+      background: #fff !important;
+      border: 1px solid var(--color-neutral-100) !important;
+    }
+    .job-sidebar-title, .sidebar-title {
+      font-size: 0.9rem !important;
+      font-weight: 700 !important;
+      color: var(--color-neutral-900) !important;
+    }
+
+    /* [4B] Job items */
+    .job-btn {
+      border-radius: 8px !important;
+      padding: 10px 12px !important;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s !important;
+      border: 1.5px solid transparent !important;
+      background: transparent !important;
+    }
+    .job-btn:hover { background: var(--color-accent-soft) !important; transform: none !important; }
+    .job-btn.active {
+      background: var(--color-accent-soft) !important;
+      border-color: var(--color-accent) !important;
+    }
+    .job-name {
+      font-weight: 600 !important;
+      font-size: 0.85rem !important;
+      color: var(--color-neutral-900) !important;
+      text-transform: capitalize;
+    }
+    .job-meta {
+      font-size: 0.72rem !important;
+      color: var(--color-neutral-500) !important;
+      margin-top: 2px;
+    }
+
+    /* [4C] Status dots */
+    .job-dot {
+      width: 8px !important; height: 8px !important;
+      border-radius: 50% !important;
+      flex-shrink: 0;
+      background: #10b981 !important;
+    }
+
+    /* [4D] Search jobs input */
+    .job-search, .search-jobs-input {
+      border: 1.5px solid var(--color-neutral-200) !important;
+      border-radius: 8px !important;
+      padding: 8px 12px !important;
+      font-size: 0.8rem !important;
+      background: var(--color-neutral-50) !important;
+      transition: border-color 0.15s, box-shadow 0.15s !important;
+      width: 100%;
+    }
+    .job-search:focus, .search-jobs-input:focus {
+      border-color: var(--color-accent) !important;
+      box-shadow: 0 0 0 3px rgba(0,200,150,0.12) !important;
+      outline: none;
+      background: #fff !important;
+    }
+
+    /* [5A] Top KPI row — colored top accent on each tile */
+    #opsStrip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+    .ops-item, #opsStrip > div {
+      border-radius: 10px !important;
+      background: #fff !important;
+      box-shadow: var(--shadow-card) !important;
+      padding: 16px 20px !important;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--color-neutral-100);
+    }
+    .ops-item::before, #opsStrip > div::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--color-accent);
+    }
+    #opsStrip > div:nth-child(2)::before { background: #6366f1; }
+    #opsStrip > div:nth-child(3)::before { background: #f59e0b; }
+    #opsStrip > div:nth-child(4)::before { background: #10b981; }
+    .ops-value { font-size: 2rem !important; font-weight: 800 !important; letter-spacing: -0.04em !important; color: var(--color-neutral-900) !important; }
+    .ops-label { font-size: 0.65rem !important; font-weight: 700 !important; letter-spacing: 0.09em !important; text-transform: uppercase; color: var(--color-neutral-500) !important; margin-bottom: 4px !important; }
+
+    /* [5B] Filter inputs */
+    .filter-input {
+      border: 1.5px solid var(--color-neutral-200) !important;
+      border-radius: 8px !important;
+      padding: 8px 12px !important;
+      font-size: 0.78rem !important;
+      background: var(--color-neutral-50) !important;
+      transition: border-color 0.15s, box-shadow 0.15s !important;
+    }
+    .filter-input:focus {
+      border-color: var(--color-accent) !important;
+      box-shadow: 0 0 0 3px rgba(0,200,150,0.10) !important;
+      outline: none;
+      background: #fff !important;
+    }
+    .filter-input::placeholder { color: #b9c2cf !important; }
+
+    /* [5C] "Viewing as" pill — more prominent */
+    .role-context-banner {
+      font-size: 0.73rem !important;
+      color: var(--color-neutral-500) !important;
+      font-weight: 500;
+    }
+    .role-context-value {
+      background: var(--color-primary) !important;
+      color: #fff !important;
+      border: 1px solid var(--color-primary) !important;
+      padding: 3px 12px !important;
+      border-radius: var(--radius-pill) !important;
+      font-size: 0.68rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase;
+    }
+
+    /* [5D] Tab bar — polished underline style */
+    nav.tabs {
+      border: none !important;
+      border-bottom: 2px solid var(--color-neutral-100) !important;
+      border-radius: 0 !important;
+      padding: 0 4px !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      gap: 2px !important;
+    }
+    .tab-btn {
+      padding: 12px 16px !important;
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.05em !important;
+      color: var(--color-neutral-500) !important;
+      border: none !important;
+      background: transparent !important;
+      border-bottom: 2px solid transparent !important;
+      margin-bottom: -2px !important;
+      border-radius: 0 !important;
+      transition: color 0.15s, border-color 0.15s !important;
+    }
+    .tab-btn:hover { color: var(--color-primary) !important; background: transparent !important; }
+    .tab-btn.active {
+      color: var(--color-primary) !important;
+      border-bottom-color: var(--color-primary) !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      font-weight: 700 !important;
+    }
+
+    /* [5E] Tab scroll arrows — fix arrow rendering */
+    .tab-scroll-btn {
+      width: 30px !important;
+      height: 30px !important;
+      border-radius: 50% !important;
+      border: 1.5px solid var(--color-neutral-200) !important;
+      background: #fff !important;
+      color: var(--color-neutral-700) !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s !important;
+      line-height: 1;
+      font-family: -apple-system, system-ui, sans-serif !important;
+      font-size: 0 !important;
+    }
+    .tab-scroll-btn::after { font-size: 1.3rem; font-weight: 600; line-height: 1; }
+    .tab-scroll-btn[aria-label="Scroll tabs left"]::after { content: '‹'; }
+    .tab-scroll-btn[aria-label="Scroll tabs right"]::after { content: '›'; }
+    .tab-scroll-btn:hover {
+      background: var(--color-primary) !important;
+      color: #fff !important;
+      border-color: var(--color-primary) !important;
+    }
+    .tab-scroll-btn[disabled] { opacity: 0.35; cursor: default; }
+    .tab-scroll-btn[disabled]:hover { background: #fff !important; color: var(--color-neutral-700) !important; border-color: var(--color-neutral-200) !important; }
+
+    /* [6A] Insight cards — colored left border */
+    .insight-card {
+      border-radius: var(--radius-card) !important;
+      padding: 16px 18px !important;
+      background: #fff !important;
+      box-shadow: var(--shadow-card) !important;
+      border-left: 4px solid var(--color-accent) !important;
+      border-top: none !important;
+    }
+    .insight-card:nth-child(1) { border-left-color: var(--color-danger) !important; }
+    .insight-card:nth-child(2) { border-left-color: var(--color-success) !important; }
+    .insight-card:nth-child(3) { border-left-color: #6366f1 !important; }
+    .insight-card:nth-child(4) { border-left-color: var(--color-warning) !important; }
+    .insight-kicker { font-size: 0.65rem !important; font-weight: 700 !important; letter-spacing: 0.1em !important; text-transform: uppercase; color: var(--color-neutral-500) !important; margin-bottom: 6px !important; }
+    .insight-value { font-weight: 800 !important; letter-spacing: -0.03em !important; }
+    .insight-text { color: var(--color-neutral-500) !important; font-size: 0.78rem !important; line-height: 1.5 !important; }
+
+    /* General card polish */
+    .card {
+      border-radius: var(--radius-card) !important;
+      box-shadow: var(--shadow-card) !important;
+      border: 1px solid var(--color-neutral-100) !important;
+      background: #fff !important;
+    }
+
+    /* AI / brief notes */
+    .ai-note { background: #fff !important; border: 1px solid var(--color-neutral-100) !important; border-radius: var(--radius-card) !important; box-shadow: var(--shadow-card) !important; }
+    .ai-note-title { color: var(--color-primary) !important; }
+    .ai-action { background: var(--color-accent-soft) !important; border-left-color: var(--color-accent) !important; }
+
+    /* Conversion grid cards */
+    .conv-card {
+      border-radius: var(--radius-card) !important;
+      background: #fff !important;
+      box-shadow: var(--shadow-card) !important;
+      border: 1px solid var(--color-neutral-100) !important;
+    }
+    .conv-rate { font-weight: 800 !important; letter-spacing: -0.02em !important; }
+
+    /* Method cards */
+    .method-card { border-radius: var(--radius-card) !important; background: #fff !important; box-shadow: var(--shadow-card) !important; border: 1px solid var(--color-neutral-100) !important; }
+    .method-card .method-bar-fill { background: var(--color-accent) !important; }
+    .round-header .round-label { color: var(--color-primary) !important; font-family: 'DM Serif Display', serif !important; }
+
+    /* Records / candidate tables */
+    .records-table th, .mini-table th, .stat-table th {
+      font-weight: 700 !important;
+      letter-spacing: 0.05em !important;
+      font-size: 0.7rem !important;
+      text-transform: uppercase;
+      color: var(--color-neutral-500) !important;
+      background: var(--color-neutral-50) !important;
+      border-bottom: 1px solid var(--color-neutral-200) !important;
+    }
+    .records-table td, .mini-table td, .stat-table td {
+      font-size: 0.8rem !important;
+      padding: 10px 12px !important;
+      color: var(--color-neutral-700) !important;
+    }
+
+    /* Funnel bars / steps */
+    .funnel-step-label { font-weight: 600 !important; color: var(--color-neutral-700) !important; }
+    .badge { font-size: 0.65rem !important; font-weight: 700 !important; letter-spacing: 0.06em !important; text-transform: uppercase; }
+
+    /* Force buttons to inherit Inter */
+    button { font-family: 'Inter', sans-serif !important; }
+  `;
+  const style = document.createElement('style');
+  style.id = 'pmPolishStyles';
+  style.textContent = css;
+  document.head.appendChild(style);
+})();
+
 // G9. Generic header / branding
 (function genericiseBranding() {
   const titleEl = document.querySelector('h1');
-  if (titleEl) titleEl.innerHTML = 'Hiring <span>Funnel</span>';
+  if (titleEl) titleEl.innerHTML = '0-10 <span>Everything</span>';
   const tag = document.querySelector('.header-tag');
-  if (tag) tag.textContent = 'Universal Hiring Intelligence';
+  if (tag) tag.textContent = 'Growth Tracker in HTML';
   const fl = document.getElementById('footerLeft');
-  if (fl) fl.textContent = 'Hiring Funnel Dashboard';
-  document.title = 'Hiring Funnel Dashboard';
+  if (fl) fl.textContent = '0-10 Everything';
+  document.title = '0-10 Everything';
   const subtitle = document.getElementById('workspaceSubtitle');
-  if (subtitle) subtitle.textContent = 'Universal hiring funnel — works across any role, any sheet structure.';
+  if (subtitle) subtitle.textContent = 'Overview across all active job openings.';
 })();
 
 </script>
