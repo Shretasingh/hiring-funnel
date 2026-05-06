@@ -6,7 +6,7 @@
 <title>0-10 Everything</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f5f7fb;
@@ -4233,6 +4233,405 @@ applyRoleView();
   `;
   const style = document.createElement('style');
   style.id = 'pmPolishStyles';
+  style.textContent = css;
+  document.head.appendChild(style);
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// ZENITH ETHEREAL THEME — sage / dusty rose / cream wellness palette
+// Applied as a final stylesheet so it overrides earlier polish.
+// ═══════════════════════════════════════════════════════════════
+(function injectZenithTheme() {
+  const css = `
+    :root {
+      --zen-primary: #98A48E;        /* sage olive */
+      --zen-primary-deep: #7A8674;
+      --zen-primary-soft: #EFF1EB;
+      --zen-secondary: #DF8480;      /* dusty rose */
+      --zen-secondary-soft: #F8DDD9;
+      --zen-tertiary: #EAB7DC;       /* pale lavender pink */
+      --zen-tertiary-soft: #F8E6F1;
+      --zen-cream: #FAF6F0;          /* warm cream canvas */
+      --zen-cream-deep: #F2ECE2;
+      --zen-card: #FFFFFF;
+      --zen-card-pink: #F4D5CD;      /* "Weekly Ritual" pink */
+      --zen-text: #2D2A26;
+      --zen-text-soft: #6B6660;
+      --zen-text-muted: #9A938A;
+      --zen-border: #ECE5DA;
+      --zen-border-soft: #F4EFE6;
+      --zen-shadow: 0 2px 14px rgba(45, 42, 38, 0.04), 0 1px 3px rgba(45, 42, 38, 0.03);
+      --zen-shadow-lift: 0 6px 22px rgba(45, 42, 38, 0.08);
+      --zen-radius: 20px;
+      --zen-radius-sm: 14px;
+
+      /* Remap brand variables so all existing components inherit Zenith */
+      --color-primary: var(--zen-primary);
+      --color-primary-light: var(--zen-primary-deep);
+      --color-accent: var(--zen-secondary);
+      --color-accent-soft: var(--zen-secondary-soft);
+      --color-success: var(--zen-primary);
+      --color-success-soft: var(--zen-primary-soft);
+      --color-danger: #C9645F;
+      --color-warning: #D4A574;
+      --color-neutral-50: var(--zen-cream);
+      --color-neutral-100: var(--zen-border-soft);
+      --color-neutral-200: var(--zen-border);
+      --color-neutral-500: var(--zen-text-muted);
+      --color-neutral-700: var(--zen-text-soft);
+      --color-neutral-900: var(--zen-text);
+      --shadow-card: var(--zen-shadow);
+      --shadow-card-hover: var(--zen-shadow-lift);
+      --radius-card: var(--zen-radius);
+      --accent: var(--zen-primary);
+      --success: var(--zen-primary);
+      --text: var(--zen-text);
+      --muted: var(--zen-text-muted);
+      --border: var(--zen-border);
+      --surface: var(--zen-card);
+      --surface2: var(--zen-cream);
+    }
+
+    /* Typography — Manrope for headlines, Plus Jakarta Sans for body */
+    body, html, button, input, select, textarea {
+      font-family: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif !important;
+      color: var(--zen-text) !important;
+    }
+    h1, .workspace-title, .round-header .round-label {
+      font-family: 'Manrope', sans-serif !important;
+      font-weight: 700 !important;
+      letter-spacing: -0.02em !important;
+      color: var(--zen-text) !important;
+    }
+    h1 span { color: var(--zen-primary) !important; }
+    .funnel-count, .funnel-pct, .kpi-value, .ops-value, .conv-rate, .metric-large {
+      font-family: 'Manrope', sans-serif !important;
+      font-weight: 700 !important;
+    }
+
+    /* Background — warm cream with soft dot grid */
+    body {
+      background: var(--zen-cream) !important;
+      background-image:
+        radial-gradient(circle, rgba(154, 147, 138, 0.08) 1px, transparent 1px) !important;
+      background-size: 16px 16px !important;
+    }
+    body::before { display: none !important; }
+
+    /* Header card */
+    header {
+      background: var(--zen-card) !important;
+      border: 1px solid var(--zen-border-soft) !important;
+      border-top: 3px solid var(--zen-primary) !important;
+      border-radius: var(--zen-radius) !important;
+      box-shadow: var(--zen-shadow) !important;
+    }
+    .header-tag { color: var(--zen-primary) !important; }
+    .header-tag::before { background: var(--zen-primary) !important; }
+
+    /* LIVE pill — sage tint */
+    .status-pill {
+      background: var(--zen-primary-soft) !important;
+      color: var(--zen-primary-deep) !important;
+      border: 1px solid var(--zen-primary) !important;
+    }
+    .status-pill::before { background: var(--zen-primary-deep) !important; }
+
+    /* Connect button */
+    .connect-btn, #connectBtn {
+      background: var(--zen-primary) !important;
+      color: #fff !important;
+      border-radius: 12px !important;
+    }
+    .connect-btn:hover, #connectBtn:hover {
+      background: var(--zen-primary-deep) !important;
+    }
+
+    /* Sidebar */
+    .job-sidebar, aside.job-sidebar {
+      background: var(--zen-card) !important;
+      border: 1px solid var(--zen-border-soft) !important;
+      border-radius: var(--zen-radius) !important;
+      box-shadow: var(--zen-shadow) !important;
+    }
+    .job-btn {
+      background: var(--zen-cream) !important;
+      border: 1.5px solid transparent !important;
+      border-radius: var(--zen-radius-sm) !important;
+    }
+    .job-btn:hover {
+      background: var(--zen-primary-soft) !important;
+    }
+    .job-btn.active {
+      background: var(--zen-primary-soft) !important;
+      border-color: var(--zen-primary) !important;
+    }
+    .job-dot { background: var(--zen-primary) !important; }
+    .job-search {
+      background: var(--zen-cream) !important;
+      border: 1.5px solid var(--zen-border) !important;
+      border-radius: 12px !important;
+    }
+    .job-search:focus {
+      border-color: var(--zen-primary) !important;
+      box-shadow: 0 0 0 3px rgba(152, 164, 142, 0.18) !important;
+      background: #fff !important;
+    }
+
+    /* Workspace title strip */
+    .workspace-titlebar {
+      background: var(--zen-card) !important;
+      border: 1px solid var(--zen-border-soft) !important;
+      border-radius: var(--zen-radius) !important;
+      box-shadow: var(--zen-shadow) !important;
+    }
+    .view-chip {
+      background: var(--zen-secondary-soft) !important;
+      color: var(--zen-secondary) !important;
+      border-radius: 999px !important;
+      padding: 4px 14px !important;
+      font-weight: 600 !important;
+    }
+
+    /* Role context banner pill */
+    .role-context-value {
+      background: var(--zen-primary) !important;
+      color: #fff !important;
+      border-color: var(--zen-primary) !important;
+    }
+
+    /* Tab bar — underline with sage active */
+    nav.tabs {
+      background: transparent !important;
+      border: none !important;
+      border-bottom: 1px solid var(--zen-border) !important;
+      box-shadow: none !important;
+      padding: 0 4px !important;
+    }
+    .tab-btn { color: var(--zen-text-muted) !important; }
+    .tab-btn:hover { color: var(--zen-primary) !important; }
+    .tab-btn.active {
+      color: var(--zen-primary-deep) !important;
+      border-bottom-color: var(--zen-primary) !important;
+    }
+    .tab-scroll-btn {
+      background: var(--zen-card) !important;
+      border-color: var(--zen-border) !important;
+      color: var(--zen-text-soft) !important;
+    }
+    .tab-scroll-btn:hover {
+      background: var(--zen-primary) !important;
+      color: #fff !important;
+      border-color: var(--zen-primary) !important;
+    }
+
+    /* Cards — soft, rounded, cream-tinted borders */
+    .card, .ai-note, .conv-card, .method-card, .kpi-card, .insight-card {
+      background: var(--zen-card) !important;
+      border: 1px solid var(--zen-border-soft) !important;
+      border-radius: var(--zen-radius) !important;
+      box-shadow: var(--zen-shadow) !important;
+    }
+    .card:hover, .kpi-card:hover, .conv-card:hover {
+      box-shadow: var(--zen-shadow-lift) !important;
+    }
+
+    /* KPI tiles */
+    .kpi-card { padding: 18px 20px !important; }
+    .kpi-card::before { background: var(--zen-primary) !important; }
+    .kpi-label { color: var(--zen-text-muted) !important; }
+    .kpi-value { color: var(--zen-text) !important; }
+    .kpi-sub { color: var(--zen-text-soft) !important; }
+
+    /* Top KPI strip — alternating sage / rose / lavender accents */
+    #opsStrip > div {
+      background: var(--zen-card) !important;
+      border: 1px solid var(--zen-border-soft) !important;
+      border-radius: var(--zen-radius) !important;
+      box-shadow: var(--zen-shadow) !important;
+    }
+    #opsStrip > div:nth-child(1)::before { background: var(--zen-primary) !important; }
+    #opsStrip > div:nth-child(2)::before { background: var(--zen-secondary) !important; }
+    #opsStrip > div:nth-child(3)::before { background: var(--zen-tertiary) !important; }
+    #opsStrip > div:nth-child(4)::before { background: var(--zen-primary-deep) !important; }
+
+    /* Insight cards — Zenith colour rotation */
+    .insight-card {
+      border-left: 4px solid var(--zen-primary) !important;
+      border-top: none !important;
+    }
+    .insight-card:nth-child(1) { border-left-color: var(--zen-secondary) !important; }
+    .insight-card:nth-child(2) { border-left-color: var(--zen-primary) !important; }
+    .insight-card:nth-child(3) { border-left-color: var(--zen-tertiary) !important; }
+    .insight-card:nth-child(4) { border-left-color: var(--zen-primary-deep) !important; }
+
+    /* Conversion grid */
+    .conv-card { padding: 18px !important; text-align: center; }
+    .conv-rate { color: var(--zen-primary-deep) !important; font-size: 1.9rem !important; }
+    .conv-label { color: var(--zen-text-soft) !important; font-weight: 600 !important; margin-top: 4px !important; }
+    .conv-from { color: var(--zen-text-muted) !important; }
+
+    /* Funnel bars */
+    .funnel-bar {
+      background: linear-gradient(90deg, var(--zen-primary), var(--zen-primary-deep)) !important;
+      color: #fff !important;
+      border-radius: 999px !important;
+    }
+    .funnel-bar-wrap {
+      background: var(--zen-cream-deep) !important;
+      border-radius: 999px !important;
+    }
+    .funnel-step-label { color: var(--zen-text) !important; font-weight: 600 !important; }
+    .funnel-count { color: var(--zen-text) !important; }
+    .funnel-pct { color: var(--zen-text-muted) !important; }
+
+    /* Buttons everywhere */
+    button { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+    .show-all-btn, .back-to-all-btn {
+      background: var(--zen-primary) !important;
+      color: #fff !important;
+      border: none !important;
+      border-radius: 12px !important;
+    }
+    .show-all-btn:hover, .back-to-all-btn:hover {
+      background: var(--zen-primary-deep) !important;
+    }
+
+    /* Tables */
+    .records-table th, .mini-table th, .stat-table th {
+      background: var(--zen-cream) !important;
+      color: var(--zen-text-muted) !important;
+      border-bottom: 1px solid var(--zen-border) !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.06em !important;
+    }
+    .records-table td, .mini-table td, .stat-table td {
+      color: var(--zen-text) !important;
+      border-bottom: 1px solid var(--zen-border-soft) !important;
+    }
+
+    /* Stage badges — soften palette */
+    .stage-sourced    { background: #F1EDE6 !important; color: #8B8378 !important; }
+    .stage-mailed     { background: #EBE5DA !important; color: #6B6660 !important; }
+    .stage-responded  { background: #FAEFD9 !important; color: #B68B3D !important; }
+    .stage-shortlist  { background: var(--zen-tertiary-soft) !important; color: #B47AA1 !important; }
+    .stage-r1         { background: #E5EFE9 !important; color: var(--zen-primary-deep) !important; }
+    .stage-r1-pass    { background: var(--zen-primary-soft) !important; color: var(--zen-primary-deep) !important; }
+    .stage-r2         { background: #FAEFD9 !important; color: #B68B3D !important; }
+    .stage-r2-pass    { background: var(--zen-primary-soft) !important; color: var(--zen-primary-deep) !important; }
+    .stage-final-pass { background: var(--zen-primary-soft) !important; color: var(--zen-primary-deep) !important; }
+    .stage-final-reject, .stage-r1-reject, .stage-r2-reject { background: var(--zen-secondary-soft) !important; color: #B85751 !important; }
+    .stage-offered    { background: var(--zen-tertiary-soft) !important; color: #B47AA1 !important; }
+    .stage-accepted   { background: var(--zen-primary-soft) !important; color: var(--zen-primary-deep) !important; }
+    .stage-joined     { background: var(--zen-primary) !important; color: #fff !important; }
+
+    /* Status badges (stage table) */
+    .status-healthy { background: var(--zen-primary-soft) !important; color: var(--zen-primary-deep) !important; border-color: var(--zen-primary) !important; }
+    .status-watch   { background: var(--zen-tertiary-soft) !important; color: #B47AA1 !important; border-color: var(--zen-tertiary) !important; }
+    .status-warn    { background: #FAEFD9 !important; color: #B68B3D !important; border-color: #E8C68A !important; }
+    .status-critical{ background: var(--zen-secondary-soft) !important; color: #B85751 !important; border-color: var(--zen-secondary) !important; }
+
+    /* Method cards */
+    .method-card {
+      background: var(--zen-card) !important;
+      border: 1px solid var(--zen-border-soft) !important;
+      border-radius: var(--zen-radius) !important;
+    }
+    .method-card .method-bar {
+      background: var(--zen-cream-deep) !important;
+      border-radius: 999px !important;
+    }
+    .method-card .method-bar-fill {
+      background: var(--zen-primary) !important;
+      border-radius: 999px !important;
+    }
+    .method-stat-value { color: var(--zen-text) !important; }
+    .method-stat-label { color: var(--zen-text-muted) !important; }
+
+    /* Round section header */
+    .round-header { border-bottom-color: var(--zen-border) !important; }
+    .round-header .round-label { color: var(--zen-primary-deep) !important; }
+    .round-header .round-meta { color: var(--zen-text-muted) !important; }
+
+    /* AI / brief notes — pink "ritual" accent for actions */
+    .ai-note { background: var(--zen-card) !important; }
+    .ai-note-title { color: var(--zen-primary-deep) !important; }
+    .ai-action {
+      background: var(--zen-secondary-soft) !important;
+      border-left: 3px solid var(--zen-secondary) !important;
+      border-radius: 12px !important;
+      color: var(--zen-text) !important;
+    }
+
+    /* Filter inputs */
+    .filter-input, .sheet-input, .role-select {
+      background: var(--zen-cream) !important;
+      border: 1.5px solid var(--zen-border) !important;
+      border-radius: 12px !important;
+      color: var(--zen-text) !important;
+    }
+    .filter-input:focus, .sheet-input:focus, .role-select:focus {
+      border-color: var(--zen-primary) !important;
+      box-shadow: 0 0 0 3px rgba(152, 164, 142, 0.18) !important;
+      background: #fff !important;
+    }
+
+    /* Section titles */
+    .section-title { color: var(--zen-text) !important; }
+    .card-title { color: var(--zen-text-soft) !important; }
+    .muted-line { color: var(--zen-text-muted) !important; }
+
+    /* Empty states */
+    .empty-state, .empty-state-rich {
+      background: var(--zen-cream) !important;
+      border: 1px dashed var(--zen-border) !important;
+      border-radius: var(--zen-radius) !important;
+    }
+    .empty-title { color: var(--zen-text-soft) !important; }
+    .empty-desc strong { color: var(--zen-primary-deep) !important; }
+
+    /* Pay range styling — rose accent */
+    .pay-range-value { color: var(--zen-secondary) !important; }
+    .pay-range-note {
+      background: var(--zen-secondary-soft) !important;
+      border-color: var(--zen-secondary) !important;
+      color: #B85751 !important;
+    }
+
+    /* Pipeline brief preview card — rose tint like the "Weekly Ritual" card */
+    #aiSummaryPreview .ai-note {
+      background: linear-gradient(135deg, var(--zen-card) 0%, var(--zen-secondary-soft) 100%) !important;
+      border-color: var(--zen-secondary) !important;
+    }
+    #aiSummaryPreview .ai-note-title { color: var(--zen-secondary) !important; letter-spacing: 0.12em !important; }
+
+    /* Scrollbars — sage thumb */
+    *::-webkit-scrollbar-thumb { background: var(--zen-primary) !important; opacity: 0.4; }
+    *::-webkit-scrollbar-thumb:hover { background: var(--zen-primary-deep) !important; }
+
+    /* Charts (bar fills) — sage by default */
+    .bar-chart .bar-fill, .bar-row .bar { background: var(--zen-primary) !important; }
+
+    /* Stage chip legacy fallback */
+    .stage-chip { background: var(--zen-primary-soft) !important; color: var(--zen-primary-deep) !important; }
+
+    /* Footer */
+    footer {
+      background: var(--zen-card) !important;
+      border: 1px solid var(--zen-border-soft) !important;
+      border-radius: var(--zen-radius) !important;
+      box-shadow: var(--zen-shadow) !important;
+      color: var(--zen-text-soft) !important;
+    }
+
+    /* Pulse colour to match sage */
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+  `;
+  const style = document.createElement('style');
+  style.id = 'zenithEthereal';
   style.textContent = css;
   document.head.appendChild(style);
 })();
