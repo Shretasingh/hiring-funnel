@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="referrer" content="no-referrer-when-downgrade">
 <title>Recruiting Funnel Operations Dashboard</title>
 <style>
   :root {
@@ -1952,6 +1956,7 @@
 
     <div class="sidebar-footer" id="sidebarFooter">
       <span id="footerStats">0 candidates</span>
+      <span id="buildStamp" style="display:block;margin-top:2px;opacity:0.7;font-size:8px;">v2026.05.19</span>
     </div>
   </aside>
 
@@ -2189,6 +2194,23 @@
     </div>
   </div>
 
+  <div class="modal hidden" id="pinModal">
+    <div class="modal-box" style="width: min(360px, 100%);">
+      <div class="modal-head">
+        <div class="modal-title">Admin access</div>
+        <div class="modal-sub">Enter the PIN to manage data sources.</div>
+      </div>
+      <div class="modal-body">
+        <input class="input" id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="off" placeholder="PIN" style="font-size: 16px; letter-spacing: 0.3em; text-align: center;">
+        <div class="error" id="pinError" style="margin-top: 10px;">Incorrect PIN.</div>
+      </div>
+      <div class="modal-foot">
+        <button class="ghost-btn" type="button" id="pinCancel">Cancel</button>
+        <button class="primary-btn" type="button" id="pinSubmit">Unlock</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal hidden" id="mapModal">
     <div class="modal-box">
       <button class="modal-close" type="button" id="closeMap" aria-label="Close">x</button>
@@ -2218,12 +2240,19 @@
 //  - Leave empty ('') to require manual connection / URL parameter.
 //  - At runtime, ?sheet=<url> in the page URL overrides this default.
 //
-//  Embedding in Google Sites:
-//    1. Host this HTML file (GitHub Pages, Netlify, Google Cloud
-//       Storage with public access, or any static host).
-//    2. In Google Sites: Insert → Embed → By URL → paste the hosted
-//       URL (optionally append ?sheet=<your-sheet-url> to override).
-//    3. Resize the embed frame to fill the page.
+//  Embedding from GitHub Pages into Google Sites:
+//    1. Push this file to your repo (e.g. as index.html in the
+//       repo root or /docs folder). Enable GitHub Pages in
+//       Settings → Pages. Your live URL is
+//       https://<user>.github.io/<repo>/
+//    2. In Google Sites: Insert → Embed → By URL → paste your
+//       Pages URL. The dashboard auto-detects iframe context and
+//       hides the admin gear; viewers see a clean read-only view.
+//    3. To override the default sheet per page, append
+//       ?sheet=<your-sheet-url> to the embed URL.
+//    4. To get back into admin while viewing the live site,
+//       open the Pages URL directly (not inside Sites) and press
+//       Ctrl/Cmd + Shift + A — or append ?admin=1.
 // ============================================================
 const DEFAULT_SHEET_URL = '';   // <-- paste your Google Sheet URL here
 const DEFAULT_REFRESH_SECONDS = 300;   // 5 minutes
@@ -2781,7 +2810,10 @@ function isEmbedRequested() {
   try {
     const params = new URLSearchParams(window.location.search);
     if (params.get('embed') === '1') return true;
+    if (params.get('admin') === '1') return false;  // explicit admin view
   } catch (e) {}
+  // Auto-embed when the page is iframed (e.g. inside Google Sites).
+  try { if (window.self !== window.top) return true; } catch (e) { return true; /* cross-origin throws */ }
   return Boolean(getEmbedSheetUrl());
 }
 
@@ -3446,20 +3478,34 @@ function recanonicalizeLoadedData() {
 // ============ ADMIN PROJECTS MODAL ============
 let adminDraft = [];  // working copy while modal is open
 
+let _pinResolver = null;
+
 function requestAdminAccess() {
-  if (!ADMIN_PIN || _adminUnlocked) return true;
-  const entered = window.prompt('Enter admin PIN to manage data sources:');
-  if (entered === null) return false;
-  if (entered === ADMIN_PIN) {
-    _adminUnlocked = true;
-    return true;
-  }
-  window.alert('Incorrect PIN.');
-  return false;
+  if (!ADMIN_PIN || _adminUnlocked) return Promise.resolve(true);
+  // Iframe-safe in-page modal. Native window.prompt/alert can be blocked
+  // (notably inside sandboxed Google Sites iframes), which used to hang the page.
+  return new Promise(resolve => {
+    _pinResolver = resolve;
+    const input = $('pinInput');
+    if (input) input.value = '';
+    const err = $('pinError');
+    if (err) err.classList.remove('active');
+    $('pinModal').classList.remove('hidden');
+    setTimeout(() => input && input.focus(), 50);
+  });
 }
 
-function openAdminModal() {
-  if (!requestAdminAccess()) return;
+function resolvePin(value) {
+  if (!_pinResolver) return;
+  const r = _pinResolver;
+  _pinResolver = null;
+  $('pinModal').classList.add('hidden');
+  r(value);
+}
+
+async function openAdminModal() {
+  const ok = await requestAdminAccess();
+  if (!ok) return;
   adminDraft = projectRegistry.map(p => ({ ...p }));
   renderAdminList();
   $('adminSaved').textContent = '';
@@ -3580,7 +3626,38 @@ document.querySelectorAll('.connect-tab[data-connect-tab]').forEach(btn => btn.a
 $('connectBtn').addEventListener('click', loadConnectedUrl);
 $('refreshInterval').addEventListener('change', event => startAutoRefresh(parseInt(event.target.value, 10)));
 $('csvInput').addEventListener('change', event => loadCsvFiles([...(event.target.files || [])]));
-['searchFilter', 'sourceFilter', 'stageFilter', 'statusFilter', 'fileFilter'].forEach(id => $(id).addEventListener('input', renderFromFilters));
+// Filter persistence (24-hour expiry). Saves on every change, restores on load.
+const FILTER_KEYS = ['searchFilter', 'sourceFilter', 'stageFilter', 'statusFilter', 'fileFilter'];
+const FILTER_STORE_KEY = 'funnelFilterState';
+const FILTER_TTL_MS = 24 * 60 * 60 * 1000;
+
+function saveFilterState() {
+  try {
+    const state = { ts: Date.now() };
+    FILTER_KEYS.forEach(id => { const el = $(id); if (el) state[id] = el.value; });
+    if ($('roleSelect')) state.roleSelect = $('roleSelect').value;
+    localStorage.setItem(FILTER_STORE_KEY, JSON.stringify(state));
+  } catch (e) { /* localStorage full or disabled — ignore */ }
+}
+
+function restoreFilterState() {
+  try {
+    const raw = localStorage.getItem(FILTER_STORE_KEY);
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    if (!state || !state.ts || Date.now() - state.ts > FILTER_TTL_MS) {
+      localStorage.removeItem(FILTER_STORE_KEY);
+      return;
+    }
+    FILTER_KEYS.forEach(id => {
+      const el = $(id);
+      if (el && state[id] != null) el.value = state[id];
+    });
+    if ($('roleSelect') && state.roleSelect != null) $('roleSelect').value = state.roleSelect;
+  } catch (e) { /* ignore parse errors */ }
+}
+
+FILTER_KEYS.forEach(id => $(id).addEventListener('input', () => { saveFilterState(); renderFromFilters(); }));
 if ($('roleSelect')) $('roleSelect').addEventListener('change', async () => {
   const val = $('roleSelect').value;
   if (val.startsWith('__project:')) {
@@ -3599,7 +3676,11 @@ if ($('roleSelect')) $('roleSelect').addEventListener('change', async () => {
     renderFromFilters();
   }
 });
-$('clearFilters').addEventListener('click', () => { resetFilters(); renderFromFilters(); });
+$('clearFilters').addEventListener('click', () => {
+  resetFilters();
+  try { localStorage.removeItem(FILTER_STORE_KEY); } catch (e) {}
+  renderFromFilters();
+});
 $('openMap').addEventListener('click', openMapModal);
 $('closeMap').addEventListener('click', closeMapModal);
 $('mapModal').addEventListener('click', event => { if (event.target === event.currentTarget) closeMapModal(); });
@@ -3664,6 +3745,27 @@ $('adminImportInput').addEventListener('change', e => adminImport(e.target.files
 // Empty-state CTAs
 if ($('emptyCtaAdmin')) $('emptyCtaAdmin').addEventListener('click', openAdminModal);
 
+// PIN modal wiring (replaces window.prompt — fixes the Manage Projects hang in iframes)
+if ($('pinSubmit')) $('pinSubmit').addEventListener('click', () => {
+  const val = ($('pinInput').value || '').trim();
+  if (val === ADMIN_PIN) {
+    _adminUnlocked = true;
+    resolvePin(true);
+  } else {
+    $('pinError').classList.add('active');
+    $('pinInput').value = '';
+    $('pinInput').focus();
+  }
+});
+if ($('pinCancel')) $('pinCancel').addEventListener('click', () => resolvePin(false));
+if ($('pinInput')) $('pinInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); $('pinSubmit').click(); }
+  if (e.key === 'Escape') { e.preventDefault(); resolvePin(false); }
+});
+if ($('pinModal')) $('pinModal').addEventListener('click', event => {
+  if (event.target === event.currentTarget) resolvePin(false);
+});
+
 // Backdoor: Ctrl/Cmd + Shift + A opens admin even in embedded mode.
 // Useful for editors viewing the published Google Site to manage sources.
 document.addEventListener('keydown', e => {
@@ -3677,6 +3779,7 @@ document.addEventListener('keydown', e => {
 // Skip the project-registry auto-load when an embed URL (?sheet=… or DEFAULT_SHEET_URL)
 // has already kicked off a load — the embed URL takes precedence for Google Sites use.
 populateRoleOptions();
+restoreFilterState();
 if (projectRegistry.length && !getEmbedSheetUrl()) {
   loadActiveProject(true);
 }
