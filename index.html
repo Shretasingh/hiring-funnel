@@ -1269,9 +1269,17 @@
 
   .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(max(105px, 10.5%), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 8px;
     margin-bottom: 8px;
+    align-items: stretch;
+    justify-content: start;
+  }
+
+  /* Cap individual KPI cards so when there are only a few, they don't
+     balloon into giant squares with empty space inside. */
+  .kpi-grid .kpi-card {
+    max-width: 240px;
   }
 
   .kpi-card {
@@ -1325,6 +1333,7 @@
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
     gap: 10px;
     margin-bottom: 10px;
+    align-items: start;
   }
 
   .grid-3 {
@@ -1332,6 +1341,7 @@
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
     gap: 10px;
     margin-bottom: 10px;
+    align-items: start;
   }
 
   .card {
@@ -1489,6 +1499,8 @@
     background: linear-gradient(135deg, var(--surface) 0%, rgba(230, 242, 239, 0.1) 100%);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-xs);
+    align-items: stretch;
+    justify-content: start;
   }
 
   .status-item {
@@ -1622,8 +1634,14 @@
 
   .profile-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(max(120px, 100%/3), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 8px;
+    align-items: start;
+    justify-content: start;
+  }
+
+  .profile-grid .profile-item {
+    max-width: 260px;
   }
 
   .profile-item {
