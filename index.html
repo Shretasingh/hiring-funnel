@@ -495,6 +495,92 @@
   /* Legacy .app references (id=app moved to .shell) — hide old tabs since sidebar replaces them */
   .tabs { display: none !important; }
 
+  /* ============ MULTI-PROJECT BADGE & JOURNEY ============ */
+  .multi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(27, 77, 67, 0.22);
+    color: var(--accent);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    margin-left: 6px;
+    transition: var(--transition);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .multi-badge:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .multi-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .multi-filter input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+
+  .journey-row {
+    display: grid;
+    grid-template-columns: minmax(140px, 1.2fr) minmax(120px, 1fr) minmax(100px, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    margin-bottom: 6px;
+    transition: var(--transition);
+  }
+  .journey-row:hover {
+    border-color: var(--accent-bright);
+    box-shadow: var(--shadow-xs);
+  }
+  .journey-project {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .journey-project::before {
+    content: '';
+    width: 6px;
+    height: 18px;
+    border-radius: 3px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .journey-label {
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 3px;
+  }
+
   /* ============ ADMIN TRIGGER ============ */
   .admin-trigger {
     display: inline-flex;
@@ -2173,7 +2259,13 @@
 
   <section class="panel" id="tab-records">
     <div class="card">
-      <div class="card-title">Candidate Records <span class="card-hint" id="recordsHint"></span></div>
+      <div class="card-title">
+        <span>Candidate Records <span class="card-hint" id="recordsHint"></span></span>
+        <label class="multi-filter">
+          <input type="checkbox" id="multiProjectOnly">
+          <span>Only multi-project candidates</span>
+        </label>
+      </div>
       <div id="recordsTable"></div>
     </div>
   </section>
@@ -2209,6 +2301,17 @@
           <button class="primary-btn" type="button" id="adminSave">Save &amp; Refresh</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="journeyModal">
+    <div class="modal-box" style="width: min(680px, 100%);">
+      <button class="modal-close" type="button" id="closeJourney" aria-label="Close">x</button>
+      <div class="modal-head">
+        <div class="modal-title" id="journeyTitle">Candidate journey</div>
+        <div class="modal-sub" id="journeySub"></div>
+      </div>
+      <div class="modal-body" id="journeyBody"></div>
     </div>
   </div>
 
@@ -2575,8 +2678,35 @@ function canonicalizeRows(rows, fileName) {
     if (!hasValue(next.Role)) next.Role = fallbackDataset;
     next.__stage = deriveStage(next);
     next.__overallStatus = deriveOverallStatus(next);
+    next.__candidateKey = deriveCandidateKey(next);
     return next;
   });
+}
+
+// Cross-project candidate identity. Email is most reliable; falls back to
+// digits-only phone, then Soul ID. Empty key = candidate can't be linked
+// across projects (no email / phone / id), so they appear standalone.
+function deriveCandidateKey(row) {
+  const email = lower(row.Email);
+  if (email && email.includes('@')) return 'e:' + email;
+  const phone = String(row.Phone_Number || '').replace(/\D/g, '');
+  if (phone.length >= 8) return 'p:' + phone;
+  const soul = lower(row.Soul_id);
+  if (soul) return 's:' + soul;
+  return '';
+}
+
+let candidateIndex = new Map();   // key -> [row, row, …]
+
+function buildCandidateIndex(rows) {
+  const map = new Map();
+  rows.forEach(row => {
+    const k = row.__candidateKey;
+    if (!k) return;
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(row);
+  });
+  return map;
 }
 
 function normalizeStage(v) {
@@ -2959,6 +3089,7 @@ function applyFiltersToRows() {
   // Project switching is handled via re-fetch; treat ad-hoc role filter values as client-side filter
   const roleVal = $('roleSelect') ? $('roleSelect').value : '';
   const role = (roleVal && !roleVal.startsWith('__project:')) ? roleVal : '';
+  const multiOnly = $('multiProjectOnly') ? $('multiProjectOnly').checked : false;
   return allRows.filter(row => {
     const candidateText = [row.Name, row.Email, row.Secondary_Email, row.Phone_Number, row.Alternate_Phone_Number, row.Soul_id].map(lower).join(' ');
     const statusText = [row.R1_Status, row.R2_Status, row.Final_Status, row.Offer_Letter_Status, row.Joining_Status, row.Contract_Status, row.NDA_Status, row.Payment_Status].map(lower).join(' ');
@@ -2967,12 +3098,14 @@ function applyFiltersToRows() {
       (!stage || row.__stage === stage) &&
       (!status || statusText.includes(status)) &&
       (!file || lower(row.__file).includes(file) || lower(row.__dataset).includes(file)) &&
-      (!role || normalize(row.Role) === role);
+      (!role || normalize(row.Role) === role) &&
+      (!multiOnly || (candidateIndex.get(row.__candidateKey)?.length || 0) > 1);
   });
 }
 
 function renderFromFilters() {
   workflowShape = detectWorkflowShape(allRows);
+  candidateIndex = buildCandidateIndex(allRows);
   currentRows = applyFiltersToRows();
   renderDashboard(computeMetrics(currentRows, workflowShape), allRows.length);
 }
@@ -3015,6 +3148,11 @@ function renderDashboard(metrics, sourceTotal) {
     kpi('Offers Shared', c.offersShared, pct(c.offersShared, c.finalSelected || c.total), '#B8860B'),
     kpi('Joined', c.joined, pct(c.joined, c.offersShared || c.total), '#2A6B5E'),
     kpi('Pending', metrics.statusCounts.pending, 'TBS / TBD', '#C97A5C'),
+    (function multiKpi() {
+      let multi = 0, uniq = 0;
+      candidateIndex.forEach(arr => { uniq++; if (arr.length > 1) multi++; });
+      return kpi('Multi-Project', multi, uniq ? pct(multi, uniq) + ' of unique' : '0%', '#5AA89C');
+    })(),
   ].filter(Boolean);
   $('overviewKpis').innerHTML = overviewKpis.join('');
 
@@ -3357,7 +3495,11 @@ function renderRecords(rows) {
     return;
   }
   const columns = [
-    ['Candidate', row => `<div class="name-cell">${escapeHtml(row.Name || 'Unnamed')}</div><div class="sub-cell">${escapeHtml(row.Email || row.Secondary_Email || 'No email')}</div>`],
+    ['Candidate', row => {
+      const count = candidateIndex.get(row.__candidateKey)?.length || 1;
+      const badge = count > 1 ? `<button class="multi-badge" type="button" data-candidate-key="${escapeHtml(row.__candidateKey)}" title="Click to see all ${count} projects for this candidate">×${count} projects</button>` : '';
+      return `<div class="name-cell">${escapeHtml(row.Name || 'Unnamed')}${badge}</div><div class="sub-cell">${escapeHtml(row.Email || row.Secondary_Email || 'No email')}</div>`;
+    }],
     ['Soul ID', row => escapeHtml(row.Soul_id || '-')],
     ['Phone', row => escapeHtml(row.Phone_Number || '-')],
     ['Source', row => escapeHtml(row.Source || '-')],
@@ -3465,6 +3607,29 @@ function openMapModal() {
 
 function closeMapModal() {
   $('mapModal').classList.add('hidden');
+}
+
+function openCandidateJourneyModal(key) {
+  const rows = candidateIndex.get(key) || [];
+  if (!rows.length) return;
+  const first = rows[0];
+  const phone = first.Phone_Number || first.Alternate_Phone_Number || '';
+  const contactBits = [first.Email, phone, first.Soul_id].filter(hasValue).map(escapeHtml).join(' &middot; ');
+  $('journeyTitle').textContent = first.Name || 'Unnamed candidate';
+  $('journeySub').innerHTML = `${contactBits || 'No contact info'}<br><strong>Appears in ${rows.length} project${rows.length === 1 ? '' : 's'}</strong>`;
+  $('journeyBody').innerHTML = rows.map(r => {
+    const proj = r.__dataset || r.Role || 'Unknown project';
+    return `<div class="journey-row">
+      <div class="journey-project">${escapeHtml(proj)}</div>
+      <div><span class="journey-label">Stage</span><span class="chip ${statusClass(r.__stage)}">${escapeHtml(r.__stage)}</span></div>
+      <div><span class="journey-label">Status</span><span class="chip ${statusClass(r.__overallStatus)}">${escapeHtml(r.__overallStatus)}</span></div>
+    </div>`;
+  }).join('');
+  $('journeyModal').classList.remove('hidden');
+}
+
+function closeJourneyModal() {
+  $('journeyModal').classList.add('hidden');
 }
 
 function saveMapModal() {
@@ -3762,6 +3927,20 @@ $('adminImportInput').addEventListener('change', e => adminImport(e.target.files
 
 // Empty-state CTAs
 if ($('emptyCtaAdmin')) $('emptyCtaAdmin').addEventListener('click', openAdminModal);
+
+// Multi-project candidate journey modal wiring
+document.body.addEventListener('click', e => {
+  const badge = e.target.closest('.multi-badge');
+  if (badge && badge.dataset.candidateKey) {
+    e.preventDefault();
+    openCandidateJourneyModal(badge.dataset.candidateKey);
+  }
+});
+if ($('closeJourney')) $('closeJourney').addEventListener('click', closeJourneyModal);
+if ($('journeyModal')) $('journeyModal').addEventListener('click', event => {
+  if (event.target === event.currentTarget) closeJourneyModal();
+});
+if ($('multiProjectOnly')) $('multiProjectOnly').addEventListener('change', renderFromFilters);
 
 // PIN modal wiring (replaces window.prompt — fixes the Manage Projects hang in iframes)
 if ($('pinSubmit')) $('pinSubmit').addEventListener('click', () => {
