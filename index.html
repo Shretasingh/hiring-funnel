@@ -2484,7 +2484,7 @@ const FIELD_ALIASES = {
   R1_Date_Sent: ['R1_Date_Sent', 'R1 Date Sent', 'R1 Invited', 'Round 1 Invited'],
   R1_Campaign_ID: ['R1_Campaign_ID', 'R1 Campaign ID'],
   R1_Batch_ID: ['R1_Batch_ID', 'R1 Batch ID'],
-  R1_Submission_Date: ['R1_Submission_Date', 'R1 Submission Date', 'R1 Submitted', 'Round 1 Submitted', 'R1 Attended'],
+  R1_Submission_Date: ['R1_Submission_Date', 'R1 Submission Date', 'R1 Submitted', 'R1 Completed', 'Round 1 Submitted', 'Round 1 Completed', 'R1 Attended'],
   R1_Status: ['R1_Status', 'R1 Status', 'Round 1 Status', 'Round 1 Result', 'First Round Result'],
   R1_Score: ['R1_Score', 'R1 Score'],
   R1_Reviewer: ['R1_Reviewer', 'R1 Reviewer'],
@@ -2493,7 +2493,7 @@ const FIELD_ALIASES = {
   R2_Date_Sent: ['R2_Date_Sent', 'R2 Date Sent', 'R2 Invited', 'Round 2 Invited'],
   R2_Campaign_ID: ['R2_Campaign_ID', 'R2 Campaign ID'],
   R2_Batch_ID: ['R2_Batch_ID', 'R2 Batch ID'],
-  R2_Submission_Date: ['R2_Submission_Date', 'R2 Submission Date', 'R2 Submitted', 'Round 2 Submitted', 'R2 Attended'],
+  R2_Submission_Date: ['R2_Submission_Date', 'R2 Submission Date', 'R2 Submitted', 'R2 Completed', 'Round 2 Submitted', 'Round 2 Completed', 'R2 Attended'],
   R2_Status: ['R2_Status', 'R2 Status', 'Round 2 Status', 'Final Interview Status'],
   R2_Score: ['R2_Score', 'R2 Score'],
   R2_Reviewer: ['R2_Reviewer', 'R2 Reviewer'],
@@ -2512,17 +2512,33 @@ const FIELD_ALIASES = {
 
 const STAGE_ORDER = [
   'Sourced',
-  'Screening',
+  'Shortlisted',
   'R1 Invited',
-  'R1 Submitted',
+  'R1 Completed',
   'R1 Selected',
   'R1 Rejected',
   'R2 Invited',
-  'R2 Submitted',
+  'R2 Completed',
   'R2 Selected',
   'R2 Rejected',
   'Final Selected',
   'Final Rejected',
+  'Offer Shared',
+  'Joined',
+];
+
+// Cumulative funnel display (rejected branches collapsed out — they're tracked
+// separately in the Stage Health card / Decision tab).
+const FUNNEL_DISPLAY_ORDER = [
+  'Sourced',
+  'Shortlisted',
+  'R1 Invited',
+  'R1 Completed',
+  'R1 Selected',
+  'R2 Invited',
+  'R2 Completed',
+  'R2 Selected',
+  'Final Selected',
   'Offer Shared',
   'Joined',
 ];
@@ -2712,15 +2728,18 @@ function buildCandidateIndex(rows) {
 function normalizeStage(v) {
   const value = lower(v).replace(/\s+/g, ' ');
   const map = {
-    screening: 'Screening',
+    screening: 'Shortlisted',
+    shortlisted: 'Shortlisted',
     sourced: 'Sourced',
     sourcing: 'Sourced',
     'r1 invited': 'R1 Invited',
-    'r1 submitted': 'R1 Submitted',
+    'r1 submitted': 'R1 Completed',
+    'r1 completed': 'R1 Completed',
     'r1 selected': 'R1 Selected',
     'r1 rejected': 'R1 Rejected',
     'r2 invited': 'R2 Invited',
-    'r2 submitted': 'R2 Submitted',
+    'r2 submitted': 'R2 Completed',
+    'r2 completed': 'R2 Completed',
     'r2 selected': 'R2 Selected',
     'r2 rejected': 'R2 Rejected',
     'final selected': 'Final Selected',
@@ -2741,13 +2760,13 @@ function deriveStage(row) {
   if (isRejected(row.Final_Status)) return 'Final Rejected';
   if (isSelected(row.R2_Status)) return 'R2 Selected';
   if (isRejected(row.R2_Status)) return 'R2 Rejected';
-  if (hasValue(row.R2_Submission_Date)) return 'R2 Submitted';
+  if (hasValue(row.R2_Submission_Date)) return 'R2 Completed';
   if (isActive(row.R2_Date_Sent) || isActive(row.R2_Method)) return 'R2 Invited';
   if (isSelected(row.R1_Status)) return 'R1 Selected';
   if (isRejected(row.R1_Status)) return 'R1 Rejected';
-  if (hasValue(row.R1_Submission_Date)) return 'R1 Submitted';
+  if (hasValue(row.R1_Submission_Date)) return 'R1 Completed';
   if (isActive(row.R1_Date_Sent) || isActive(row.R1_Method)) return 'R1 Invited';
-  if (isYes(row.Shortlisted) || isMaybe(row.Shortlisted)) return 'Screening';
+  if (isYes(row.Shortlisted) || isMaybe(row.Shortlisted)) return 'Shortlisted';
   return 'Sourced';
 }
 
@@ -3011,6 +3030,27 @@ function visibleStageOrder(shape = workflowShape) {
   return STAGE_ORDER.filter(stage => shape.hasR2 || !stage.startsWith('R2 '));
 }
 
+// Cumulative funnel: at each stage, count everyone who reached it OR beyond.
+// Uses the metric counts (which already roll up correctly) rather than the
+// distinct __stage distribution. R2 stages are dropped entirely when the
+// dataset has no R2 signal (workflowShape.hasR2 === false).
+function buildFunnelData(c, shape = workflowShape) {
+  const all = [
+    { label: 'Sourced',        count: c.total },
+    { label: 'Shortlisted',    count: c.shortlistedYes },
+    { label: 'R1 Invited',     count: c.r1Invited },
+    { label: 'R1 Completed',   count: c.r1Submitted },
+    { label: 'R1 Selected',    count: c.r1Selected },
+    { label: 'R2 Invited',     count: c.r2Invited,   r2: true },
+    { label: 'R2 Completed',   count: c.r2Submitted, r2: true },
+    { label: 'R2 Selected',    count: c.r2Selected,  r2: true },
+    { label: 'Final Selected', count: c.finalSelected },
+    { label: 'Offer Shared',   count: c.offersShared },
+    { label: 'Joined',         count: c.joined },
+  ];
+  return all.filter(item => shape.hasR2 || !item.r2).map(({ label, count }) => ({ label, count }));
+}
+
 function stageCounts(rows, shape = workflowShape) {
   const stages = visibleStageOrder(shape);
   const map = new Map(stages.map(stage => [stage, 0]));
@@ -3026,12 +3066,12 @@ function computeMetrics(rows, shape = workflowShape) {
     sourced: total,
     shortlistedYes: countWhere(rows, 'Shortlisted', isYes),
     shortlistedMaybe: countWhere(rows, 'Shortlisted', isMaybe),
-    r1Invited: rows.filter(r => isActive(r.R1_Date_Sent) || isActive(r.R1_Method) || isMeaningfulSignal(r.R1_Status) || ['R1 Invited', 'R1 Submitted', 'R1 Selected', 'R1 Rejected', 'R2 Invited', 'R2 Submitted', 'R2 Selected', 'R2 Rejected', 'Final Selected', 'Final Rejected', 'Offer Shared', 'Joined'].includes(r.__stage)).length,
-    r1Submitted: rows.filter(r => hasValue(r.R1_Submission_Date) || isSelected(r.R1_Status) || isRejected(r.R1_Status) || ['R1 Submitted', 'R1 Selected', 'R1 Rejected', 'R2 Invited', 'R2 Submitted', 'R2 Selected', 'R2 Rejected', 'Final Selected', 'Final Rejected', 'Offer Shared', 'Joined'].includes(r.__stage)).length,
-    r1Selected: rows.filter(r => isSelected(r.R1_Status) || ['R1 Selected', 'R2 Invited', 'R2 Submitted', 'R2 Selected', 'R2 Rejected', 'Final Selected', 'Final Rejected', 'Offer Shared', 'Joined'].includes(r.__stage)).length,
+    r1Invited: rows.filter(r => isActive(r.R1_Date_Sent) || isActive(r.R1_Method) || isMeaningfulSignal(r.R1_Status) || ['R1 Invited', 'R1 Completed', 'R1 Selected', 'R1 Rejected', 'R2 Invited', 'R2 Completed', 'R2 Selected', 'R2 Rejected', 'Final Selected', 'Final Rejected', 'Offer Shared', 'Joined'].includes(r.__stage)).length,
+    r1Submitted: rows.filter(r => hasValue(r.R1_Submission_Date) || isSelected(r.R1_Status) || isRejected(r.R1_Status) || ['R1 Completed', 'R1 Selected', 'R1 Rejected', 'R2 Invited', 'R2 Completed', 'R2 Selected', 'R2 Rejected', 'Final Selected', 'Final Rejected', 'Offer Shared', 'Joined'].includes(r.__stage)).length,
+    r1Selected: rows.filter(r => isSelected(r.R1_Status) || ['R1 Selected', 'R2 Invited', 'R2 Completed', 'R2 Selected', 'R2 Rejected', 'Final Selected', 'Final Rejected', 'Offer Shared', 'Joined'].includes(r.__stage)).length,
     r1Rejected: rows.filter(r => isRejected(r.R1_Status) || r.__stage === 'R1 Rejected').length,
-    r2Invited: shape.hasR2 ? rows.filter(r => rowHasR2Signal(r) || ['R2 Invited', 'R2 Submitted', 'R2 Selected', 'R2 Rejected'].includes(r.__stage)).length : 0,
-    r2Submitted: shape.hasR2 ? rows.filter(r => hasValue(r.R2_Submission_Date) || isSelected(r.R2_Status) || isRejected(r.R2_Status) || ['R2 Submitted', 'R2 Selected', 'R2 Rejected'].includes(r.__stage)).length : 0,
+    r2Invited: shape.hasR2 ? rows.filter(r => rowHasR2Signal(r) || ['R2 Invited', 'R2 Completed', 'R2 Selected', 'R2 Rejected'].includes(r.__stage)).length : 0,
+    r2Submitted: shape.hasR2 ? rows.filter(r => hasValue(r.R2_Submission_Date) || isSelected(r.R2_Status) || isRejected(r.R2_Status) || ['R2 Completed', 'R2 Selected', 'R2 Rejected'].includes(r.__stage)).length : 0,
     r2Selected: shape.hasR2 ? rows.filter(r => isSelected(r.R2_Status) || r.__stage === 'R2 Selected').length : 0,
     r2Rejected: shape.hasR2 ? rows.filter(r => isRejected(r.R2_Status) || r.__stage === 'R2 Rejected').length : 0,
     finalSelected: rows.filter(r => isSelected(r.Final_Status) || ['Final Selected', 'Offer Shared', 'Joined'].includes(r.__stage)).length,
@@ -3156,7 +3196,7 @@ function renderDashboard(metrics, sourceTotal) {
   ].filter(Boolean);
   $('overviewKpis').innerHTML = overviewKpis.join('');
 
-  renderWorkflow('workflowFunnel', metrics.stages, c.total);
+  renderWorkflow('workflowFunnel', buildFunnelData(c, workflowShape), c.total);
   renderBars('overviewSources', metrics.sourceMix, c.total);
   renderBars('stageHealth', [
     { label: 'Selected', count: metrics.statusCounts.selected },
@@ -3399,7 +3439,7 @@ function renderRound(roundKey, metrics, cfg) {
   const batchKey = `${cfg.prefix}_Batch_ID`;
   $(cfg.kpisId).innerHTML = [
     kpi('Invited', cfg.invited, pct(cfg.invited, c.total), '#2A6B5E'),
-    kpi('Submitted', cfg.submitted, pct(cfg.submitted, cfg.invited), '#3F8B7E'),
+    kpi('Completed', cfg.submitted, pct(cfg.submitted, cfg.invited), '#3F8B7E'),
     kpi('Selected', cfg.selected, pct(cfg.selected, cfg.submitted || cfg.invited), '#1B4D43'),
     kpi('Rejected', cfg.rejected, pct(cfg.rejected, cfg.submitted || cfg.invited), '#C65555'),
     kpi('On Hold', countWhere(metrics.rows, `${cfg.prefix}_Status`, isOnHold), 'Status count', '#B8860B'),
