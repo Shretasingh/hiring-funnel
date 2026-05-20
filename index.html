@@ -670,6 +670,110 @@
     letter-spacing: 0.02em;
   }
 
+  /* Campaign → batch grouping */
+  .pd-campaign-row {
+    padding: 8px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    transition: var(--transition);
+  }
+  .pd-campaign-row:hover { border-color: var(--accent-bright); }
+
+  .pd-campaign-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .pd-campaign-head .pd-id-chip {
+    font-size: 11px;
+    padding: 4px 11px;
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .pd-campaign-head .pd-id-chip:hover {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
+  }
+
+  .pd-campaign-count {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-right: auto;
+  }
+
+  .pd-batch-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding-left: 14px;
+    border-left: 2px dashed var(--border);
+    margin-left: 4px;
+  }
+
+  .pd-batch-list .pd-id-chip {
+    background: var(--surface-2);
+    color: var(--text);
+    border-color: var(--border);
+    font-size: 10px;
+  }
+  .pd-batch-list .pd-id-chip:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent-bright);
+  }
+
+  .pd-empty-block {
+    font-size: 10px;
+    color: var(--muted);
+    font-style: italic;
+    padding: 8px 10px;
+  }
+
+  /* Footer with Save + last-saved */
+  .pd-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .pd-last-saved {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-style: italic;
+  }
+
+  .pd-last-saved.dirty {
+    color: var(--warning);
+    font-weight: 700;
+    font-style: normal;
+  }
+
+  .pd-last-saved.dirty::before {
+    content: '●';
+    margin-right: 4px;
+  }
+
+  .pd-save-btn {
+    padding: 8px 18px;
+    font-size: 10px;
+  }
+  .pd-save-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
   /* ============ MULTI-PROJECT BADGE & JOURNEY ============ */
   .multi-badge {
     display: inline-flex;
@@ -1706,6 +1810,96 @@
     gap: 6px;
   }
 
+  /* Stacked horizontal bar (status by source) */
+  .stacked-chart { display: grid; gap: 6px; }
+
+  .stacked-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .stacked-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .stacked-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .stacked-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 48px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .stacked-source {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .stacked-bar {
+    display: flex;
+    height: 22px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+
+  .stacked-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 9px;
+    font-weight: 800;
+    color: #fff;
+    min-width: 0;
+    overflow: hidden;
+    transition: opacity 0.18s ease, filter 0.18s ease;
+    cursor: default;
+  }
+
+  .stacked-bar:hover .stacked-segment {
+    filter: brightness(0.92);
+  }
+
+  .stacked-segment:hover {
+    filter: brightness(1.08) !important;
+  }
+
+  .stacked-total {
+    text-align: right;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  @media (max-width: 768px) {
+    .stacked-row {
+      grid-template-columns: 1fr;
+    }
+    .stacked-total { text-align: left; }
+  }
+
   .pie-chart {
     display: grid;
     grid-template-columns: minmax(160px, 200px) 1fr;
@@ -2481,6 +2675,7 @@
       <div class="card"><div class="card-title">R1 Method Breakdown</div><div class="bar-chart" id="r1Methods"></div></div>
       <div class="card"><div class="card-title">R1 Status Breakdown</div><div class="bar-chart" id="r1Statuses"></div></div>
     </div>
+    <div class="card"><div class="card-title">R1 Status by Source <span class="card-hint">Stacked breakdown · top 10 sources</span></div><div class="stacked-chart" id="r1StatusBySource"></div></div>
     <div class="card"><div class="card-title">R1 Tracking Coverage</div><div class="profile-grid" id="r1Coverage"></div></div>
   </section>
 
@@ -2490,6 +2685,7 @@
       <div class="card"><div class="card-title">R2 Method Breakdown</div><div class="bar-chart" id="r2Methods"></div></div>
       <div class="card"><div class="card-title">R2 Status Breakdown</div><div class="bar-chart" id="r2Statuses"></div></div>
     </div>
+    <div class="card"><div class="card-title">R2 Status by Source <span class="card-hint">Stacked breakdown · top 10 sources</span></div><div class="stacked-chart" id="r2StatusBySource"></div></div>
     <div class="card"><div class="card-title">R2 Tracking Coverage</div><div class="profile-grid" id="r2Coverage"></div></div>
   </section>
 
@@ -3372,6 +3568,33 @@ function uniqueValues(rows, key) {
   return [...set].sort();
 }
 
+// Build [{campaign, count, batches: [{label, count}]}], grouped by campaign ID.
+// A single campaign can have multiple batches — each row contributes one
+// (campaign, batch) pair; we tally batches per campaign and total candidates
+// per campaign. Rows with a batch but no campaign go under '(unassigned)'.
+function groupCampaignsBatches(rows, campaignKey, batchKey) {
+  const map = new Map();   // campaign -> { count, batches: Map<batch, count> }
+  rows.forEach(r => {
+    const c = normalize(r[campaignKey]);
+    const b = normalize(r[batchKey]);
+    if (!hasValue(c) && !hasValue(b)) return;
+    const campaign = hasValue(c) ? c : '(unassigned)';
+    if (!map.has(campaign)) map.set(campaign, { count: 0, batches: new Map() });
+    const entry = map.get(campaign);
+    entry.count++;
+    if (hasValue(b)) entry.batches.set(b, (entry.batches.get(b) || 0) + 1);
+  });
+  return [...map.entries()]
+    .sort((a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0]))
+    .map(([campaign, info]) => ({
+      campaign,
+      count: info.count,
+      batches: [...info.batches.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([label, count]) => ({ label, count })),
+    }));
+}
+
 function copyToClipboard(text) {
   if (!text) return;
   const fallback = () => {
@@ -3413,15 +3636,8 @@ function renderProjectDetails(project, rows) {
   card.style.display = '';
 
   const meta = getProjectMeta(project);
-  const r1Campaigns = uniqueValues(rows, 'R1_Campaign_ID');
-  const r1Batches   = uniqueValues(rows, 'R1_Batch_ID');
-  const r2Campaigns = uniqueValues(rows, 'R2_Campaign_ID');
-  const r2Batches   = uniqueValues(rows, 'R2_Batch_ID');
-
-  const chipList = (values) => {
-    if (!values.length) return '<span class="pd-id-empty">— None recorded</span>';
-    return values.map(v => `<span class="pd-id-chip" data-copy="${escapeHtml(v)}" title="Click to copy">${escapeHtml(v)}</span>`).join('');
-  };
+  const r1Groups = groupCampaignsBatches(rows, 'R1_Campaign_ID', 'R1_Batch_ID');
+  const r2Groups = workflowShape.hasR2 ? groupCampaignsBatches(rows, 'R2_Campaign_ID', 'R2_Batch_ID') : [];
 
   const editableField = (label, field, placeholder, type = 'text') => `
     <div class="pd-field">
@@ -3430,30 +3646,34 @@ function renderProjectDetails(project, rows) {
       <button class="pd-copy-btn" type="button" data-copy-target="next-input" aria-label="Copy ${escapeHtml(label)}">${copyIcon()}</button>
     </div>`;
 
-  const idsSection = (title, hasR2) => `
+  const renderCampaignGroup = (g) => {
+    const batchesCopyable = g.batches.map(b => b.label).join(', ');
+    const fullCopyable = g.batches.length
+      ? `${g.campaign}: ${batchesCopyable}`
+      : g.campaign;
+    return `
+      <div class="pd-campaign-row">
+        <div class="pd-campaign-head">
+          <span class="pd-id-chip" data-copy="${escapeHtml(g.campaign)}" title="Click to copy campaign ID">${escapeHtml(g.campaign)}</span>
+          <span class="pd-campaign-count">${formatNum(g.count)} candidate${g.count === 1 ? '' : 's'} · ${g.batches.length} batch${g.batches.length === 1 ? '' : 'es'}</span>
+          <button class="pd-copy-btn" type="button" data-copy="${escapeHtml(fullCopyable)}" title="Copy campaign + all batches">${copyIcon()}</button>
+        </div>
+        <div class="pd-batch-list">
+          ${g.batches.length
+            ? g.batches.map(b => `<span class="pd-id-chip" data-copy="${escapeHtml(b.label)}" title="Click to copy batch ID">${escapeHtml(b.label)} · ${formatNum(b.count)}</span>`).join('')
+            : '<span class="pd-id-empty">No batch IDs recorded for this campaign</span>'}
+        </div>
+      </div>`;
+  };
+
+  const idsSection = `
     <div class="pd-section">
-      <div class="pd-section-title">${escapeHtml(title)}</div>
-      <div class="pd-field">
-        <div class="pd-field-label">R1 Campaigns</div>
-        <div class="pd-chip-row" data-copy-list="${escapeHtml(r1Campaigns.join(', '))}">${chipList(r1Campaigns)}</div>
-        <button class="pd-copy-btn" type="button" data-copy="${escapeHtml(r1Campaigns.join(', '))}" aria-label="Copy all R1 campaign IDs" ${r1Campaigns.length ? '' : 'disabled'}>${copyIcon()}</button>
-      </div>
-      <div class="pd-field">
-        <div class="pd-field-label">R1 Batches</div>
-        <div class="pd-chip-row">${chipList(r1Batches)}</div>
-        <button class="pd-copy-btn" type="button" data-copy="${escapeHtml(r1Batches.join(', '))}" aria-label="Copy all R1 batch IDs" ${r1Batches.length ? '' : 'disabled'}>${copyIcon()}</button>
-      </div>
-      ${hasR2 ? `
-        <div class="pd-field">
-          <div class="pd-field-label">R2 Campaigns</div>
-          <div class="pd-chip-row">${chipList(r2Campaigns)}</div>
-          <button class="pd-copy-btn" type="button" data-copy="${escapeHtml(r2Campaigns.join(', '))}" aria-label="Copy all R2 campaign IDs" ${r2Campaigns.length ? '' : 'disabled'}>${copyIcon()}</button>
-        </div>
-        <div class="pd-field">
-          <div class="pd-field-label">R2 Batches</div>
-          <div class="pd-chip-row">${chipList(r2Batches)}</div>
-          <button class="pd-copy-btn" type="button" data-copy="${escapeHtml(r2Batches.join(', '))}" aria-label="Copy all R2 batch IDs" ${r2Batches.length ? '' : 'disabled'}>${copyIcon()}</button>
-        </div>
+      <div class="pd-section-title">Campaign &amp; Batch IDs</div>
+      <div class="pd-section-title" style="border-bottom:none;padding-bottom:0;margin-top:4px;font-size:10px;letter-spacing:0.08em;color:var(--accent);">R1</div>
+      ${r1Groups.length ? r1Groups.map(renderCampaignGroup).join('') : '<div class="pd-empty-block">No R1 campaign data recorded</div>'}
+      ${workflowShape.hasR2 ? `
+        <div class="pd-section-title" style="border-bottom:none;padding-bottom:0;margin-top:8px;font-size:10px;letter-spacing:0.08em;color:var(--accent);">R2</div>
+        ${r2Groups.length ? r2Groups.map(renderCampaignGroup).join('') : '<div class="pd-empty-block">No R2 campaign data recorded</div>'}
       ` : ''}
     </div>`;
 
@@ -3479,12 +3699,43 @@ function renderProjectDetails(project, rows) {
       </div>
     </div>`;
 
-  $('projectDetailsBody').innerHTML =
-    idsSection('Campaign & Batch IDs', workflowShape.hasR2) +
-    projectInfoSection +
-    pocSection;
+  $('projectDetailsBody').innerHTML = idsSection + projectInfoSection + pocSection;
 
-  $('projectDetailsHint').textContent = `${escapeHtml(project)} · ${formatNum(rows.length)} candidates in view`;
+  // Footer (Save + last saved)
+  let footer = document.querySelector('#projectDetailsCard .pd-footer');
+  if (!footer) {
+    footer = document.createElement('div');
+    footer.className = 'pd-footer';
+    footer.innerHTML = `
+      <span class="pd-last-saved" id="pdLastSaved"></span>
+      <button class="primary-btn pd-save-btn" type="button" id="pdSaveBtn" disabled>Save Project Details</button>`;
+    $('projectDetailsCard').appendChild(footer);
+  }
+  refreshLastSavedLabel(project);
+  $('pdSaveBtn').disabled = true;
+  _pdDirtyProject = '';
+
+  $('projectDetailsHint').textContent = `${escapeHtml(project)} · ${formatNum(rows.length)} candidates in view · edits saved per project`;
+}
+
+let _pdDirtyProject = '';   // tracks which project has unsaved edits
+
+function refreshLastSavedLabel(project) {
+  const el = $('pdLastSaved');
+  if (!el) return;
+  const all = loadProjectMeta();
+  const stamp = all[project] && all[project].__lastSaved;
+  if (_pdDirtyProject === project) {
+    el.classList.add('dirty');
+    el.textContent = 'Unsaved changes';
+  } else if (stamp) {
+    el.classList.remove('dirty');
+    const d = new Date(stamp);
+    el.textContent = `Last saved ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  } else {
+    el.classList.remove('dirty');
+    el.textContent = 'Not saved yet';
+  }
 }
 
 function stageCounts(rows, shape = workflowShape) {
@@ -3669,6 +3920,7 @@ function renderDashboard(metrics, sourceTotal) {
     kpisId: 'r1Kpis',
     methodsId: 'r1Methods',
     statusesId: 'r1Statuses',
+    statusBySourceId: 'r1StatusBySource',
   });
   if (workflowShape.hasR2) {
     renderRound('r2', metrics, {
@@ -3683,6 +3935,7 @@ function renderDashboard(metrics, sourceTotal) {
       kpisId: 'r2Kpis',
       methodsId: 'r2Methods',
       statusesId: 'r2Statuses',
+      statusBySourceId: 'r2StatusBySource',
     });
   }
   renderDecision(metrics);
@@ -3864,6 +4117,111 @@ function renderPieChart(id, items) {
   el.innerHTML = svg + legend;
 }
 
+// Map a status label to a semantic color (Selected → green, Rejected → red, etc.)
+// Falls back to the COLORS palette for unknown labels (cycled by index).
+function statusColor(label, fallbackIdx = 0) {
+  const v = lower(label);
+  if (['selected', 'shortlisted', 'cleared', 'joined', 'signed', 'shared'].includes(v)) return '#2E7D6E';
+  if (['rejected', 'not interested', 'dropped', 'declined'].includes(v)) return '#C65555';
+  if (['on hold', 'hold'].includes(v)) return '#B8860B';
+  if (['tbs', 'tbd', 'pending', 'in progress', 'in-progress', 'initiated'].includes(v)) return '#9A7428';
+  if (['not applicable', 'na', 'n/a'].includes(v)) return '#A0AAAA';
+  if (['maybe'].includes(v)) return '#3F8B7E';
+  if (['no'].includes(v)) return '#C97A5C';
+  return COLORS[fallbackIdx % COLORS.length];
+}
+
+// Cross-tab: rows × source vs. statusKey. Returns sources sorted by total count
+// (largest first), each with segments listing distinct status values + counts.
+// Sources are grouped using the same sourceGroup() as the rest of the dashboard.
+function crossTabBySource(rows, statusKey, maxSources = 10) {
+  const sourceMap = new Map();   // sourceLabel -> Map<status, count>
+  const allStatuses = new Set();
+  rows.forEach(r => {
+    const status = normalize(r[statusKey]);
+    if (!hasValue(status)) return;
+    const src = sourceGroup(r.Source);
+    if (!hasValue(src)) return;
+    allStatuses.add(status);
+    if (!sourceMap.has(src)) sourceMap.set(src, new Map());
+    const m = sourceMap.get(src);
+    m.set(status, (m.get(status) || 0) + 1);
+  });
+
+  // Order statuses with selected first, rejected last (visually scans like a funnel)
+  const statusOrder = [...allStatuses].sort((a, b) => {
+    const rank = s => {
+      const v = lower(s);
+      if (['selected', 'shortlisted', 'cleared', 'joined', 'signed', 'shared'].includes(v)) return 0;
+      if (['maybe'].includes(v)) return 1;
+      if (['on hold', 'hold'].includes(v)) return 2;
+      if (['tbs', 'tbd', 'pending', 'in progress', 'in-progress', 'initiated'].includes(v)) return 3;
+      if (['not applicable', 'na', 'n/a'].includes(v)) return 4;
+      if (['no'].includes(v)) return 5;
+      if (['rejected', 'not interested', 'dropped', 'declined'].includes(v)) return 6;
+      return 7;
+    };
+    return rank(a) - rank(b) || a.localeCompare(b);
+  });
+
+  const list = [...sourceMap.entries()].map(([source, statusMap]) => {
+    const total = [...statusMap.values()].reduce((a, b) => a + b, 0);
+    const segments = statusOrder
+      .map(s => ({ label: s, count: statusMap.get(s) || 0 }))
+      .filter(seg => seg.count > 0);
+    return { source, total, segments };
+  }).sort((a, b) => b.total - a.total || a.source.localeCompare(b.source));
+
+  // Cap at maxSources, fold the rest into a single "Other" row
+  if (list.length > maxSources) {
+    const head = list.slice(0, maxSources - 1);
+    const tail = list.slice(maxSources - 1);
+    const merged = new Map();
+    tail.forEach(item => item.segments.forEach(seg => merged.set(seg.label, (merged.get(seg.label) || 0) + seg.count)));
+    const tailRow = {
+      source: 'Other',
+      total: tail.reduce((s, i) => s + i.total, 0),
+      segments: statusOrder.map(s => ({ label: s, count: merged.get(s) || 0 })).filter(seg => seg.count > 0),
+    };
+    head.push(tailRow);
+    return { rows: head, statusOrder };
+  }
+  return { rows: list, statusOrder };
+}
+
+function renderStackedBars(id, { rows: data, statusOrder }) {
+  const el = $(id);
+  if (!el) return;
+  if (!data || !data.length) {
+    el.innerHTML = '<div class="no-data">No status data available for this round</div>';
+    return;
+  }
+
+  const colorFor = (label) => {
+    const c = statusColor(label, statusOrder.indexOf(label));
+    return c;
+  };
+
+  const legend = `<div class="stacked-legend">${
+    statusOrder.map(s => `<span class="stacked-legend-item"><span class="stacked-legend-dot" style="background:${colorFor(s)};"></span>${escapeHtml(s)}</span>`).join('')
+  }</div>`;
+
+  const rowsHtml = data.map(row => {
+    const segs = row.segments.map(seg => {
+      const widthPct = (seg.count / row.total) * 100;
+      const showLabel = widthPct >= 10;
+      return `<span class="stacked-segment" style="width:${widthPct.toFixed(2)}%;background:${colorFor(seg.label)};" title="${escapeHtml(seg.label)}: ${formatNum(seg.count)} (${pct(seg.count, row.total)})">${showLabel ? formatNum(seg.count) : ''}</span>`;
+    }).join('');
+    return `<div class="stacked-row">
+      <div class="stacked-source" title="${escapeHtml(row.source)}">${escapeHtml(row.source)}</div>
+      <div class="stacked-bar">${segs}</div>
+      <div class="stacked-total">${formatNum(row.total)}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = legend + rowsHtml;
+}
+
 function renderBars(id, items, denominator = null) {
   const el = $(id);
   if (!items || !items.length) {
@@ -3962,6 +4320,9 @@ function renderRound(roundKey, metrics, cfg) {
   ].join('');
   renderBars(cfg.methodsId, cfg.methods, c.total);
   renderBars(cfg.statusesId, cfg.statuses, c.total);
+  if (cfg.statusBySourceId) {
+    renderStackedBars(cfg.statusBySourceId, crossTabBySource(metrics.rows, `${cfg.prefix}_Status`, 10));
+  }
   $(cfg.coverageId).innerHTML = [
     profileItem('Campaign IDs', pct(countValid(metrics.rows, campaignKey), c.total), `${formatNum(countValid(metrics.rows, campaignKey))} rows`),
     profileItem('Batch IDs', pct(countValid(metrics.rows, batchKey), c.total), `${formatNum(countValid(metrics.rows, batchKey))} rows`),
@@ -4510,18 +4871,56 @@ document.body.addEventListener('click', e => {
   }
 });
 
-// Autosave on edit (debounced per-field)
-let _pdSaveTimer = null;
+// Mark project-details edits as "dirty" until user clicks Save.
+// (Earlier silent auto-save was confusing — explicit Save gives clear feedback
+// and matches the user's mental model.)
 document.body.addEventListener('input', e => {
   const inp = e.target.closest('.pd-edit');
   if (!inp) return;
   const project = inp.dataset.project;
-  const field = inp.dataset.field;
-  if (!project || !field) return;
-  clearTimeout(_pdSaveTimer);
-  _pdSaveTimer = setTimeout(() => {
-    updateProjectMeta(project, field, inp.value);
-  }, 300);
+  if (!project) return;
+  _pdDirtyProject = project;
+  const btn = $('pdSaveBtn');
+  if (btn) btn.disabled = false;
+  refreshLastSavedLabel(project);
+});
+
+function savePdEdits() {
+  const card = $('projectDetailsCard');
+  if (!card || card.style.display === 'none') return;
+  // Collect every visible .pd-edit input — they all share the same project
+  const inputs = card.querySelectorAll('.pd-edit');
+  if (!inputs.length) return;
+  const project = inputs[0].dataset.project;
+  const all = loadProjectMeta();
+  if (!all[project]) all[project] = {};
+  inputs.forEach(inp => { all[project][inp.dataset.field] = inp.value; });
+  all[project].__lastSaved = Date.now();
+  saveProjectMeta(all);
+  _pdDirtyProject = '';
+  const btn = $('pdSaveBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Saved ✓';
+    setTimeout(() => { btn.textContent = 'Save Project Details'; }, 1400);
+  }
+  refreshLastSavedLabel(project);
+  showCopyToast('Project details saved');
+}
+
+document.body.addEventListener('click', e => {
+  if (e.target.closest('#pdSaveBtn')) savePdEdits();
+});
+
+// Save with Ctrl/Cmd+S when the focus is inside a project-details edit field.
+document.body.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+    const card = $('projectDetailsCard');
+    if (card && card.style.display !== 'none' && e.target.closest('.pd-edit')) {
+      e.preventDefault();
+      savePdEdits();
+    }
+  }
 });
 
 // Multi-project candidate journey modal wiring
