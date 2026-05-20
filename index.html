@@ -495,6 +495,181 @@
   /* Legacy .app references (id=app moved to .shell) — hide old tabs since sidebar replaces them */
   .tabs { display: none !important; }
 
+  /* ============ PROJECT DETAILS CARD ============ */
+  .project-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 12px;
+    align-items: start;
+  }
+
+  .pd-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pd-section-title {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pd-field {
+    display: grid;
+    grid-template-columns: 110px 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .pd-field-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+  }
+
+  .pd-field-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: var(--transition);
+    min-width: 0;
+  }
+
+  .pd-field-input:hover { border-color: var(--accent-bright); }
+  .pd-field-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(230, 242, 239, 0.3);
+    box-shadow: 0 0 0 3px rgba(27, 77, 67, 0.1);
+  }
+
+  .pd-field-input[readonly] {
+    background: var(--surface-2);
+    color: var(--text);
+    cursor: text;
+    user-select: all;
+  }
+
+  .pd-copy-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    flex-shrink: 0;
+  }
+
+  .pd-copy-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent-bright);
+  }
+
+  .pd-copy-btn.copied {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .pd-copy-btn svg { width: 13px; height: 13px; }
+
+  .pd-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+    min-height: 26px;
+  }
+
+  .pd-id-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    border: 1px solid rgba(27, 77, 67, 0.18);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: var(--transition);
+    user-select: all;
+  }
+
+  .pd-id-chip:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .pd-id-chip.copied { background: var(--success); color: #fff; border-color: var(--success); }
+
+  .pd-id-empty {
+    font-size: 10px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* Toast for copy feedback */
+  .copy-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--accent);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    box-shadow: 0 8px 24px rgba(13, 40, 32, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 200;
+  }
+
+  .copy-toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .pd-poc-block {
+    padding: 8px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pd-poc-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+
   /* ============ MULTI-PROJECT BADGE & JOURNEY ============ */
   .multi-badge {
     display: inline-flex;
@@ -1531,6 +1706,87 @@
     gap: 6px;
   }
 
+  .pie-chart {
+    display: grid;
+    grid-template-columns: minmax(160px, 200px) 1fr;
+    gap: 18px;
+    align-items: center;
+    padding: 4px 0;
+  }
+
+  .pie-chart svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 200px;
+    transform: rotate(-90deg);
+  }
+
+  .pie-chart .pie-slice {
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    transform-origin: center;
+    cursor: default;
+  }
+
+  .pie-chart .pie-slice:hover {
+    opacity: 0.85;
+    transform: scale(1.02);
+  }
+
+  .pie-legend {
+    display: grid;
+    gap: 5px;
+    align-content: center;
+    min-width: 0;
+  }
+
+  .pie-legend-row {
+    display: grid;
+    grid-template-columns: 11px 1fr auto auto;
+    gap: 8px;
+    align-items: center;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .pie-legend-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .pie-legend-label {
+    color: var(--text);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pie-legend-count {
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 11px;
+    text-align: right;
+  }
+
+  .pie-legend-pct {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 36px;
+    text-align: right;
+  }
+
+  @media (max-width: 600px) {
+    .pie-chart {
+      grid-template-columns: 1fr;
+      justify-items: center;
+    }
+    .pie-legend { width: 100%; }
+  }
+
   .bar-row {
     display: grid;
     grid-template-columns: 120px 1fr 48px;
@@ -2174,20 +2430,30 @@
 
   <section class="panel active" id="tab-overview">
     <div class="kpi-grid" id="overviewKpis"></div>
+    <div class="card" id="projectDetailsCard" style="display:none;">
+      <div class="card-title">Project Details <span class="card-hint" id="projectDetailsHint">Editable fields auto-save · click any value to copy</span></div>
+      <div class="project-details-grid" id="projectDetailsBody"></div>
+    </div>
     <div class="grid-2">
       <div class="card">
         <div class="card-title">Workflow Funnel <span class="card-hint">Current stage distribution</span></div>
         <div class="workflow" id="workflowFunnel"></div>
       </div>
       <div class="card">
-        <div class="card-title">Source Mix <span class="card-hint">Top channels</span></div>
+        <div class="card-title">Source Breakdown <span class="card-hint">Top channels</span></div>
         <div class="bar-chart" id="overviewSources"></div>
       </div>
     </div>
     <div class="status-strip" id="overviewHealth"></div>
-    <div class="card">
-      <div class="card-title">Stage Health <span class="card-hint">Selected, rejected, pending</span></div>
-      <div class="bar-chart" id="stageHealth"></div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Years of Experience <span class="card-hint">Distribution</span></div>
+        <div class="pie-chart" id="experiencePie"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Stage Health <span class="card-hint">Selected, rejected, pending</span></div>
+        <div class="bar-chart" id="stageHealth"></div>
+      </div>
     </div>
   </section>
 
@@ -2212,8 +2478,8 @@
   <section class="panel" id="tab-r1">
     <div class="kpi-grid" id="r1Kpis"></div>
     <div class="grid-2">
-      <div class="card"><div class="card-title">R1 Method Mix</div><div class="bar-chart" id="r1Methods"></div></div>
-      <div class="card"><div class="card-title">R1 Status Mix</div><div class="bar-chart" id="r1Statuses"></div></div>
+      <div class="card"><div class="card-title">R1 Method Breakdown</div><div class="bar-chart" id="r1Methods"></div></div>
+      <div class="card"><div class="card-title">R1 Status Breakdown</div><div class="bar-chart" id="r1Statuses"></div></div>
     </div>
     <div class="card"><div class="card-title">R1 Tracking Coverage</div><div class="profile-grid" id="r1Coverage"></div></div>
   </section>
@@ -2221,8 +2487,8 @@
   <section class="panel" id="tab-r2">
     <div class="kpi-grid" id="r2Kpis"></div>
     <div class="grid-2">
-      <div class="card"><div class="card-title">R2 Method Mix</div><div class="bar-chart" id="r2Methods"></div></div>
-      <div class="card"><div class="card-title">R2 Status Mix</div><div class="bar-chart" id="r2Statuses"></div></div>
+      <div class="card"><div class="card-title">R2 Method Breakdown</div><div class="bar-chart" id="r2Methods"></div></div>
+      <div class="card"><div class="card-title">R2 Status Breakdown</div><div class="bar-chart" id="r2Statuses"></div></div>
     </div>
     <div class="card"><div class="card-title">R2 Tracking Coverage</div><div class="profile-grid" id="r2Coverage"></div></div>
   </section>
@@ -2303,6 +2569,8 @@
       </div>
     </div>
   </div>
+
+  <div class="copy-toast" id="copyToast">Copied</div>
 
   <div class="modal hidden" id="journeyModal">
     <div class="modal-box" style="width: min(680px, 100%);">
@@ -3032,9 +3300,24 @@ function visibleStageOrder(shape = workflowShape) {
 
 // Cumulative funnel: at each stage, count everyone who reached it OR beyond.
 // Uses the metric counts (which already roll up correctly) rather than the
-// distinct __stage distribution. R2 stages are dropped entirely when the
-// dataset has no R2 signal (workflowShape.hasR2 === false).
-function buildFunnelData(c, shape = workflowShape) {
+// distinct __stage distribution.
+//
+// In "All Projects / All Roles" view, R1 & R2 stages are dropped because
+// projects mix-and-match (some have R2, some don't), making the round-by-round
+// drop-off misleading when aggregated. In that case we show only the
+// project-agnostic stages: Sourced → Shortlisted → Final Selected → Offer → Joined.
+// When a specific role/project is selected, R2 visibility follows that
+// project's actual workflow shape (hasR2).
+function buildFunnelData(c, shape = workflowShape, isAllProjects = false) {
+  if (isAllProjects) {
+    return [
+      { label: 'Sourced',        count: c.total },
+      { label: 'Shortlisted',    count: c.shortlistedYes },
+      { label: 'Final Selected', count: c.finalSelected },
+      { label: 'Offer Shared',   count: c.offersShared },
+      { label: 'Joined',         count: c.joined },
+    ];
+  }
   const all = [
     { label: 'Sourced',        count: c.total },
     { label: 'Shortlisted',    count: c.shortlistedYes },
@@ -3049,6 +3332,159 @@ function buildFunnelData(c, shape = workflowShape) {
     { label: 'Joined',         count: c.joined },
   ];
   return all.filter(item => shape.hasR2 || !item.r2).map(({ label, count }) => ({ label, count }));
+}
+
+function isAllProjectsView() {
+  const sel = $('roleSelect');
+  return !sel || !sel.value;
+}
+
+// ============================================================
+//  PROJECT DETAILS (per-project editable metadata + derived IDs)
+// ============================================================
+const PROJECT_META_KEY = 'funnelProjectMeta';
+const PROJECT_META_FIELDS = ['payRate', 'projectLeads', 'supplyPocName', 'supplyPocEmail', 'fulfillmentPocName', 'fulfillmentPocEmail'];
+
+function loadProjectMeta() {
+  try { return JSON.parse(localStorage.getItem(PROJECT_META_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function saveProjectMeta(all) {
+  try { localStorage.setItem(PROJECT_META_KEY, JSON.stringify(all)); } catch (e) {}
+}
+function getProjectMeta(project) {
+  const all = loadProjectMeta();
+  return all[project] || {};
+}
+function updateProjectMeta(project, field, value) {
+  const all = loadProjectMeta();
+  if (!all[project]) all[project] = {};
+  all[project][field] = value;
+  saveProjectMeta(all);
+}
+
+function uniqueValues(rows, key) {
+  const set = new Set();
+  rows.forEach(r => {
+    const v = normalize(r[key]);
+    if (hasValue(v)) set.add(v);
+  });
+  return [...set].sort();
+}
+
+function copyToClipboard(text) {
+  if (!text) return;
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(fallback);
+    } else { fallback(); }
+  } catch (e) { fallback(); }
+  showCopyToast();
+}
+
+let _copyToastTimer = null;
+function showCopyToast(msg = 'Copied') {
+  const t = $('copyToast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('visible');
+  if (_copyToastTimer) clearTimeout(_copyToastTimer);
+  _copyToastTimer = setTimeout(() => t.classList.remove('visible'), 1200);
+}
+
+function copyIcon() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+}
+
+function renderProjectDetails(project, rows) {
+  const card = $('projectDetailsCard');
+  if (!card) return;
+  if (!project || isAllProjectsView()) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const meta = getProjectMeta(project);
+  const r1Campaigns = uniqueValues(rows, 'R1_Campaign_ID');
+  const r1Batches   = uniqueValues(rows, 'R1_Batch_ID');
+  const r2Campaigns = uniqueValues(rows, 'R2_Campaign_ID');
+  const r2Batches   = uniqueValues(rows, 'R2_Batch_ID');
+
+  const chipList = (values) => {
+    if (!values.length) return '<span class="pd-id-empty">— None recorded</span>';
+    return values.map(v => `<span class="pd-id-chip" data-copy="${escapeHtml(v)}" title="Click to copy">${escapeHtml(v)}</span>`).join('');
+  };
+
+  const editableField = (label, field, placeholder, type = 'text') => `
+    <div class="pd-field">
+      <div class="pd-field-label">${escapeHtml(label)}</div>
+      <input class="pd-field-input pd-edit" type="${type}" data-field="${escapeHtml(field)}" data-project="${escapeHtml(project)}" placeholder="${escapeHtml(placeholder)}" value="${escapeHtml(meta[field] || '')}" autocomplete="off">
+      <button class="pd-copy-btn" type="button" data-copy-target="next-input" aria-label="Copy ${escapeHtml(label)}">${copyIcon()}</button>
+    </div>`;
+
+  const idsSection = (title, hasR2) => `
+    <div class="pd-section">
+      <div class="pd-section-title">${escapeHtml(title)}</div>
+      <div class="pd-field">
+        <div class="pd-field-label">R1 Campaigns</div>
+        <div class="pd-chip-row" data-copy-list="${escapeHtml(r1Campaigns.join(', '))}">${chipList(r1Campaigns)}</div>
+        <button class="pd-copy-btn" type="button" data-copy="${escapeHtml(r1Campaigns.join(', '))}" aria-label="Copy all R1 campaign IDs" ${r1Campaigns.length ? '' : 'disabled'}>${copyIcon()}</button>
+      </div>
+      <div class="pd-field">
+        <div class="pd-field-label">R1 Batches</div>
+        <div class="pd-chip-row">${chipList(r1Batches)}</div>
+        <button class="pd-copy-btn" type="button" data-copy="${escapeHtml(r1Batches.join(', '))}" aria-label="Copy all R1 batch IDs" ${r1Batches.length ? '' : 'disabled'}>${copyIcon()}</button>
+      </div>
+      ${hasR2 ? `
+        <div class="pd-field">
+          <div class="pd-field-label">R2 Campaigns</div>
+          <div class="pd-chip-row">${chipList(r2Campaigns)}</div>
+          <button class="pd-copy-btn" type="button" data-copy="${escapeHtml(r2Campaigns.join(', '))}" aria-label="Copy all R2 campaign IDs" ${r2Campaigns.length ? '' : 'disabled'}>${copyIcon()}</button>
+        </div>
+        <div class="pd-field">
+          <div class="pd-field-label">R2 Batches</div>
+          <div class="pd-chip-row">${chipList(r2Batches)}</div>
+          <button class="pd-copy-btn" type="button" data-copy="${escapeHtml(r2Batches.join(', '))}" aria-label="Copy all R2 batch IDs" ${r2Batches.length ? '' : 'disabled'}>${copyIcon()}</button>
+        </div>
+      ` : ''}
+    </div>`;
+
+  const projectInfoSection = `
+    <div class="pd-section">
+      <div class="pd-section-title">Project Info</div>
+      ${editableField('Pay Rate', 'payRate', 'e.g. ₹50,000 / month')}
+      ${editableField('Project Leads', 'projectLeads', 'e.g. Jane Doe, John Smith')}
+    </div>`;
+
+  const pocSection = `
+    <div class="pd-section">
+      <div class="pd-section-title">Points of Contact</div>
+      <div class="pd-poc-block">
+        <div class="pd-poc-title">Supply POC</div>
+        ${editableField('Name', 'supplyPocName', 'Full name')}
+        ${editableField('Email', 'supplyPocEmail', 'name@company.com', 'email')}
+      </div>
+      <div class="pd-poc-block">
+        <div class="pd-poc-title">Fulfillment POC</div>
+        ${editableField('Name', 'fulfillmentPocName', 'Full name')}
+        ${editableField('Email', 'fulfillmentPocEmail', 'name@company.com', 'email')}
+      </div>
+    </div>`;
+
+  $('projectDetailsBody').innerHTML =
+    idsSection('Campaign & Batch IDs', workflowShape.hasR2) +
+    projectInfoSection +
+    pocSection;
+
+  $('projectDetailsHint').textContent = `${escapeHtml(project)} · ${formatNum(rows.length)} candidates in view`;
 }
 
 function stageCounts(rows, shape = workflowShape) {
@@ -3196,8 +3632,13 @@ function renderDashboard(metrics, sourceTotal) {
   ].filter(Boolean);
   $('overviewKpis').innerHTML = overviewKpis.join('');
 
-  renderWorkflow('workflowFunnel', buildFunnelData(c, workflowShape), c.total);
+  const allProjectsView = isAllProjectsView();
+  renderWorkflow('workflowFunnel', buildFunnelData(c, workflowShape, allProjectsView), c.total);
+  const funnelHint = document.querySelector('#tab-overview .grid-2 .card .card-title .card-hint');
+  if (funnelHint) funnelHint.textContent = allProjectsView ? 'Combined view · R1/R2 collapsed' : 'Current stage distribution';
+  renderProjectDetails($('roleSelect') ? $('roleSelect').value : '', metrics.rows);
   renderBars('overviewSources', metrics.sourceMix, c.total);
+  renderPieChart('experiencePie', bucketYears(metrics.rows));
   renderBars('stageHealth', [
     { label: 'Selected', count: metrics.statusCounts.selected },
     { label: 'Rejected', count: metrics.statusCounts.rejected },
@@ -3349,6 +3790,78 @@ function renderWorkflow(id, items, total) {
       <div class="pct">${percentage}</div>
     </div>`;
   }).join('');
+}
+
+// Years of Experience bucketing. Returns [{label, count}] sorted by bucket order.
+const YOE_BUCKETS = [
+  { label: '0–2 yrs',  min: 0,   max: 2.0001 },
+  { label: '3–5 yrs',  min: 2.0001, max: 5.0001 },
+  { label: '6–10 yrs', min: 5.0001, max: 10.0001 },
+  { label: '10+ yrs',  min: 10.0001, max: Infinity },
+];
+
+function bucketYears(rows) {
+  const counts = YOE_BUCKETS.map(() => 0);
+  let unspecified = 0;
+  rows.forEach(row => {
+    const raw = normalize(row.Years_of_Experience);
+    const num = parseFloat(raw.replace(/[^0-9.]/g, ''));
+    if (!isFinite(num) || raw === '') { unspecified++; return; }
+    const idx = YOE_BUCKETS.findIndex(b => num >= b.min && num < b.max);
+    if (idx >= 0) counts[idx]++;
+    else unspecified++;
+  });
+  const out = YOE_BUCKETS.map((b, i) => ({ label: b.label, count: counts[i] })).filter(item => item.count > 0);
+  if (unspecified) out.push({ label: 'Not specified', count: unspecified });
+  return out;
+}
+
+function renderPieChart(id, items) {
+  const el = $(id);
+  if (!el) return;
+  const total = items.reduce((sum, it) => sum + it.count, 0);
+  if (!total) {
+    el.innerHTML = '<div class="no-data" style="grid-column:1/-1;">No data available</div>';
+    return;
+  }
+  const cx = 100, cy = 100, r = 85;
+  let startAngle = 0;
+  const slices = items.map((item, i) => {
+    const angle = (item.count / total) * 360;
+    const endAngle = startAngle + angle;
+    const color = COLORS[i % COLORS.length];
+    let pathD = '';
+    if (item.count === total) {
+      // single slice covering everything — draw as full circle
+      pathD = `M ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy} A ${r} ${r} 0 1 1 ${cx - r} ${cy} Z`;
+    } else {
+      const startRad = (startAngle * Math.PI) / 180;
+      const endRad = (endAngle * Math.PI) / 180;
+      const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
+      const x2 = cx + r * Math.cos(endRad), y2 = cy + r * Math.sin(endRad);
+      const largeArc = angle > 180 ? 1 : 0;
+      pathD = `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
+    }
+    startAngle = endAngle;
+    return { color, pathD, label: item.label, count: item.count };
+  });
+
+  const svg = `<svg viewBox="0 0 200 200" role="img" aria-label="${escapeHtml(id)} distribution">
+    ${slices.map(s => `<path class="pie-slice" d="${s.pathD}" fill="${s.color}" stroke="#fff" stroke-width="1.5"><title>${escapeHtml(s.label)}: ${formatNum(s.count)} (${pct(s.count, total)})</title></path>`).join('')}
+  </svg>`;
+
+  const legend = `<div class="pie-legend">${
+    slices.map(s => `
+      <div class="pie-legend-row">
+        <span class="pie-legend-dot" style="background:${s.color};"></span>
+        <span class="pie-legend-label" title="${escapeHtml(s.label)}">${escapeHtml(s.label)}</span>
+        <span class="pie-legend-count">${formatNum(s.count)}</span>
+        <span class="pie-legend-pct">${pct(s.count, total)}</span>
+      </div>
+    `).join('')
+  }</div>`;
+
+  el.innerHTML = svg + legend;
 }
 
 function renderBars(id, items, denominator = null) {
@@ -3967,6 +4480,49 @@ $('adminImportInput').addEventListener('change', e => adminImport(e.target.files
 
 // Empty-state CTAs
 if ($('emptyCtaAdmin')) $('emptyCtaAdmin').addEventListener('click', openAdminModal);
+
+// Project Details: delegated copy + autosave handlers
+document.body.addEventListener('click', e => {
+  // Copy chips (campaign/batch IDs)
+  const chip = e.target.closest('.pd-id-chip');
+  if (chip && chip.dataset.copy) {
+    copyToClipboard(chip.dataset.copy);
+    chip.classList.add('copied');
+    setTimeout(() => chip.classList.remove('copied'), 700);
+    return;
+  }
+  // Copy buttons
+  const btn = e.target.closest('.pd-copy-btn');
+  if (btn) {
+    let text = btn.dataset.copy;
+    if (btn.dataset.copyTarget === 'next-input') {
+      const input = btn.parentElement.querySelector('.pd-field-input');
+      text = input ? input.value : '';
+    }
+    if (text) {
+      copyToClipboard(text);
+      btn.classList.add('copied');
+      setTimeout(() => btn.classList.remove('copied'), 700);
+    } else {
+      showCopyToast('Nothing to copy');
+    }
+    return;
+  }
+});
+
+// Autosave on edit (debounced per-field)
+let _pdSaveTimer = null;
+document.body.addEventListener('input', e => {
+  const inp = e.target.closest('.pd-edit');
+  if (!inp) return;
+  const project = inp.dataset.project;
+  const field = inp.dataset.field;
+  if (!project || !field) return;
+  clearTimeout(_pdSaveTimer);
+  _pdSaveTimer = setTimeout(() => {
+    updateProjectMeta(project, field, inp.value);
+  }, 300);
+});
 
 // Multi-project candidate journey modal wiring
 document.body.addEventListener('click', e => {
